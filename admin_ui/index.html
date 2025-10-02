@@ -1,0 +1,347 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Admin RXP (local)</title>
+<style>
+:root{--b:#111;--g:#f6f6f6;--p:#2563eb}
+*{box-sizing:border-box}
+body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:0;background:#fff;color:#222}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #eee;background:#fafafa;position:sticky;top:0}
+h1{font-size:18px;margin:0}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+input,button,select,textarea{padding:8px;border:1px solid #ddd;border-radius:8px}
+button{background:var(--p);color:#fff;border:none;cursor:pointer}
+button:disabled{opacity:.6;cursor:not-allowed}
+main{max-width:1100px;margin:18px auto;padding:0 16px}
+.tabs{display:flex;border-bottom:1px solid #eee;margin-bottom:12px}
+.tab{padding:10px 14px;cursor:pointer}
+.tab.active{border-bottom:2px solid var(--p);font-weight:600}
+.card{border:1px solid #eee;border-radius:12px;padding:14px;margin-bottom:12px}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid #f0f0f0;padding:8px;text-align:left}
+tr:hover{background:#fafafa}
+.badge{padding:2px 6px;border-radius:6px;background:#eef}
+small.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+</style>
+
+<header>
+  <h1>Admin RXP (local)</h1>
+  <div class="row">
+    <input id="email" placeholder="email" value="admin@rxpcustom3d.ro">
+    <input id="pass" type="password" placeholder="parola" value="Parola123!">
+    <button id="btn-login" type="button">Login</button>
+    <button id="btn-logout" type="button">Logout</button>
+    <small class="mono" id="tok"></small>
+  </div>
+</header>
+
+<main>
+  <div class="tabs">
+    <div class="tab active" data-t="active">Comenzi active</div>
+    <div class="tab" data-t="done">Comenzi finalizate</div>
+    <div class="tab" data-t="invoices">Facturi</div>
+    <div class="tab" data-t="products">Produse</div>
+  </div>
+
+  <section id="panel-active" class="card">
+    <div class="row">
+      <select id="statusActive">
+        <option value="">(toate)</option>
+        <option>created</option><option>pending</option><option>paid</option>
+        <option>in_preparation</option><option>shipped</option>
+      </select>
+      <button id="btn-load-active" type="button">Load</button>
+    </div>
+    <div id="activeList"></div>
+  </section>
+
+  <section id="panel-done" class="card" style="display:none">
+    <div class="row">
+      <select id="statusDone">
+        <option value="">(toate)</option>
+        <option>delivered</option><option>canceled</option>
+      </select>
+      <button id="btn-load-done" type="button">Load</button>
+    </div>
+    <div id="doneList"></div>
+  </section>
+
+  <section id="panel-invoices" class="card" style="display:none">
+    <div class="row">
+      <input id="qinvoice" placeholder="caută nr. factură">
+      <button id="btn-load-invoices" type="button">Caută</button>
+    </div>
+    <div id="invoiceList"></div>
+  </section>
+
+  <section id="panel-products" class="card" style="display:none">
+    <div class="row"><button id="btn-reload-products" type="button">Reîncarcă</button></div>
+    <div id="prodList" style="margin:10px 0"></div>
+
+    <h3>Adaugă / editează</h3>
+    <div class="row">
+      <input id="pid" placeholder="ID (gol pt. add)">
+      <input id="sku" placeholder="SKU">
+      <input id="name" placeholder="Nume">
+      <input id="price" placeholder="Preț (bani)">
+      <input id="stock" placeholder="Stoc">
+      <input id="image_url" placeholder="URL imagine">
+      <select id="category">
+        <option value="">(fără)</option>
+        <option value="car_tuning">Car Tuning</option>
+        <option value="suporti_numar">Suporti numar</option>
+      </select>
+      <input id="tags" placeholder="Taguri (ex: mercedes,toyota,bmw)">
+      <label>Activ? <input id="active" type="checkbox" checked></label>
+    </div>
+    <div class="row"><textarea id="desc" placeholder="descriere" style="width:100%;height:80px"></textarea></div>
+    <div class="row">
+      <button id="btn-save" type="button">Salvează</button>
+      <button id="btn-del" type="button">Șterge după ID</button>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ========= helpers ========= */
+const API = location.origin + '/api';
+let TOKEN = localStorage.getItem('admintoken') || '';
+
+function setT(t){
+  TOKEN = t || '';
+  localStorage.setItem('admintoken', TOKEN);
+  document.getElementById('tok').textContent = TOKEN ? TOKEN.slice(0,28) + '…' : '';
+}
+function alertApiError(res, extra){
+  let msg = `Eroare ${res.status}`;
+  return res.json().then(j=>{
+    if (j?.detail) msg += `: ${JSON.stringify(j.detail)}`;
+    if (extra) console.error(extra, j);
+    alert(msg);
+  }).catch(()=>alert(msg));
+}
+
+/* ========= auth ========= */
+async function login(){
+  const e = document.getElementById('email').value.trim();
+  const p = document.getElementById('pass').value;
+  const r = await fetch(API + '/auth/login', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email:e, password:p})
+  });
+  if (!r.ok) return alertApiError(r, 'login fail');
+  const d = await r.json();
+  if (d.access_token){ setT(d.access_token); alert('Autentificat'); }
+  else alert('Login eșuat.');
+}
+function logout(){ setT(''); alert('Logged out'); }
+
+/* ========= tabs ========= */
+function showTab(key){
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.classList.toggle('active', t.dataset.t===key);
+  });
+  ['active','done','invoices','products'].forEach(x=>{
+    document.getElementById('panel-'+x).style.display = (x===key)? '' : 'none';
+  });
+  if (key==='active') loadOrders('active');
+  if (key==='done') loadOrders('done');
+  if (key==='invoices') loadInvoices();
+  if (key==='products') loadProducts();
+}
+
+/* ========= orders ========= */
+async function loadOrders(scope){
+  if (!TOKEN) return alert('Nu ești logat.');
+  const sel = scope==='active' ? document.getElementById('statusActive') : document.getElementById('statusDone');
+  const s = sel.value;
+  const url = API + '/admin/orders?scope=' + scope + (s? '&status='+encodeURIComponent(s):'');
+  const r = await fetch(url, { headers:{ Authorization:'Bearer '+TOKEN } });
+  if (!r.ok) return alertApiError(r, 'loadOrders');
+  const data = await r.json();
+  const host = scope==='active' ? document.getElementById('activeList') : document.getElementById('doneList');
+  host.innerHTML = `
+    <table><tr><th>ID</th><th>Status</th><th>Total</th><th>Items</th><th>Set status</th><th>Detalii</th></tr>
+    ${data.map(o=>`
+      <tr>
+        <td>${o.id}</td>
+        <td><span class="badge">${o.status}</span></td>
+        <td>${(o.total_amount/100).toFixed(2)} ${o.currency}</td>
+        <td>${o.items.map(i=>`${i.product.name} × ${i.quantity}`).join('<br>')}</td>
+        <td>
+          <select id="st_${o.id}">
+            ${['created','pending','paid','in_preparation','shipped','delivered','canceled'].map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}
+          </select>
+          <button type="button" onclick="updStatus(${o.id})">Set</button>
+        </td>
+        <td><a href="order.html?id=${o.id}">Detalii</a></td>
+      </tr>`).join('')}
+    </table>`;
+}
+async function updStatus(id){
+  if (!TOKEN) return alert('Nu ești logat.');
+  const s = document.getElementById('st_'+id).value;
+  const r = await fetch(API + '/admin/orders/' + id + '/status', {
+    method:'PATCH',
+    headers:{'Content-Type':'application/json', Authorization:'Bearer '+TOKEN},
+    body: JSON.stringify({status:s})
+  });
+  if (!r.ok) return alertApiError(r, 'updStatus');
+  alert('Status actualizat');
+}
+
+async function openPdf(id){
+  if (!TOKEN) return alert('Nu ești logat.');
+  const r = await fetch(`${API}/admin/orders/${id}/invoice.pdf`, {
+    headers: { Authorization: 'Bearer ' + TOKEN }
+  });
+  if (!r.ok) return alertApiError(r, 'openPdf');
+  const blob = await r.blob();
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+}
+
+/* ========= invoices ========= */
+async function loadInvoices(){
+  if (!TOKEN) return alert('Nu ești logat.');
+  const q = document.getElementById('qinvoice').value.trim();
+  const r = await fetch(API + '/admin/invoices' + (q?`?q=${encodeURIComponent(q)}`:''), {
+    headers:{ Authorization:'Bearer '+TOKEN }
+  });
+  if (!r.ok) return alertApiError(r, 'loadInvoices');
+  const data = await r.json();
+  document.getElementById('invoiceList').innerHTML = `
+    <table><tr><th>Order</th><th>Nr factură</th><th>Status</th><th>Total</th><th>PDF</th></tr>
+    ${data.map(x=>`
+      <tr>
+        <td>#${x.id}</td><td>${x.invoice_no||''}</td><td>${x.status}</td>
+        <td>${(x.total_amount/100).toFixed(2)} ${x.currency}</td>
+        <td><a href="#" onclick="openPdf(${x.id});return false;">deschide</a></td>
+      </tr>`).join('')}
+    </table>`;
+}
+
+/* ========= products ========= */
+function escAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;'); }
+
+async function loadProducts(){
+  if (!TOKEN) return alert('Nu ești logat.');
+  const r = await fetch(API + '/admin/products', { headers:{ Authorization:'Bearer '+TOKEN } });
+  if (!r.ok) return alertApiError(r, 'loadProducts');
+  const data = await r.json();
+  document.getElementById('prodList').innerHTML = `
+    <table>
+      <tr><th>ID</th><th>SKU</th><th>Nume</th><th>Categorie</th><th>Taguri</th><th>Preț</th><th>Stoc</th><th>Activ</th></tr>
+      ${data.map(p=>`
+        <tr data-id="${p.id}"
+            data-sku="${escAttr(p.sku)}"
+            data-name="${escAttr(p.name)}"
+            data-price="${p.price}"
+            data-stock="${p.stock}"
+            data-active="${p.is_active?1:0}"
+            data-image="${escAttr(p.image_url||'')}"
+            data-category="${escAttr(p.category||'')}"
+            data-tags="${escAttr((p.tags||[]).join(','))}"
+            onclick="fillFormFromRow(this)">
+          <td>${p.id}</td><td>${escAttr(p.sku)}</td><td>${escAttr(p.name)}</td>
+          <td>${escAttr(p.category||'')}</td>
+          <td>${escAttr((p.tags||[]).join(', '))}</td>
+          <td>${(p.price/100).toFixed(2)} ${p.currency}</td><td>${p.stock}</td><td>${p.is_active?'da':'nu'}</td>
+        </tr>`).join('')}
+    </table>`;
+}
+function fillFormFromRow(tr){
+  document.getElementById('pid').value = tr.dataset.id || '';
+  document.getElementById('sku').value = tr.dataset.sku || '';
+  document.getElementById('name').value = tr.dataset.name || '';
+  document.getElementById('price').value = tr.dataset.price || '';
+  document.getElementById('stock').value = tr.dataset.stock || '';
+  document.getElementById('active').checked = tr.dataset.active==='1';
+  document.getElementById('image_url').value = tr.dataset.image || '';
+  document.getElementById('category').value = tr.dataset.category || '';
+  document.getElementById('tags').value = tr.dataset.tags || '';
+}
+
+async function saveProduct(){
+  if (!TOKEN) return alert('Nu ești logat.');
+
+  const idEl    = document.getElementById('pid');
+  const skuEl   = document.getElementById('sku');
+  const nameEl  = document.getElementById('name');
+  const priceEl = document.getElementById('price');
+  const stockEl = document.getElementById('stock');
+  const actEl   = document.getElementById('active');
+  const catEl   = document.getElementById('category');
+  const tagsEl  = document.getElementById('tags');
+  const imgEl   = document.getElementById('image_url');
+  const descEl  = document.getElementById('desc');
+
+  const price = parseInt((priceEl.value || '').toString().replace(/\D/g,''), 10);
+  const stock = parseInt(stockEl.value || '0', 10);
+  const category = catEl.value; // slug: car_tuning | suporti_numar
+  const tags = (tagsEl.value || '').split(',').map(s=>s.trim()).filter(Boolean);
+
+  const body = {
+    sku: skuEl.value.trim(),
+    name: nameEl.value.trim(),
+    description: (descEl.value || '').trim() || null,
+    price: Number.isFinite(price) ? price : 0,
+    currency: 'ron',
+    stock: Number.isFinite(stock) ? stock : 0,
+    is_active: !!actEl.checked,
+    image_url: (imgEl.value || '').trim() || null,
+    category,
+    tags
+  };
+
+  const isUpdate = !!(idEl.value && idEl.value.trim());
+  const url = API + (isUpdate ? '/admin/products/' + idEl.value.trim() : '/admin/products');
+  const method = isUpdate ? 'PUT' : 'POST';
+
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type':'application/json', Authorization:'Bearer '+TOKEN },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) return alertApiError(res, 'saveProduct');
+  alert('Salvat!');
+  await loadProducts();
+}
+
+async function delProduct(){
+  if (!TOKEN) return alert('Nu ești logat.');
+  const id = (document.getElementById('pid').value || '').trim();
+  if (!id) return alert('Completează ID');
+  const r = await fetch(API + '/admin/products/' + id, { method:'DELETE', headers:{ Authorization:'Bearer '+TOKEN } });
+  if (!r.ok) return alertApiError(r, 'delProduct');
+  document.getElementById('pid').value='';
+  await loadProducts();
+  alert('Șters');
+}
+
+/* ========= wire events after DOM ready ========= */
+document.addEventListener('DOMContentLoaded', () => {
+  setT(TOKEN);
+
+  // Tabs
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click', ()=>showTab(t.dataset.t));
+  });
+
+  // Buttons
+  document.getElementById('btn-login').addEventListener('click', e=>{ e.preventDefault(); login().catch(err=>{console.error(err); alert('Eroare login');}); });
+  document.getElementById('btn-logout').addEventListener('click', e=>{ e.preventDefault(); logout(); });
+
+  document.getElementById('btn-load-active').addEventListener('click', e=>{ e.preventDefault(); loadOrders('active'); });
+  document.getElementById('btn-load-done').addEventListener('click', e=>{ e.preventDefault(); loadOrders('done'); });
+  document.getElementById('btn-load-invoices').addEventListener('click', e=>{ e.preventDefault(); loadInvoices(); });
+
+  document.getElementById('btn-reload-products').addEventListener('click', e=>{ e.preventDefault(); loadProducts(); });
+  document.getElementById('btn-save').addEventListener('click', e=>{ e.preventDefault(); saveProduct().catch(err=>{ console.error(err); alert('Eroare JS: ' + (err?.message||err)); }); });
+  document.getElementById('btn-del').addEventListener('click', e=>{ e.preventDefault(); delProduct(); });
+
+  // Deschide by default tab-ul de produse
+  showTab('products');
+});
+</script>

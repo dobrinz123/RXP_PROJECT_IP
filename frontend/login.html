@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Autentificare</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- IMPORTANT: un singur script, fără alte fișiere care dublează login-ul -->
+  <script defer src="script.js?v=auth5"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-container">
+      <div class="logo">
+        <span class="logo-title">RXP CUSTOM3D</span>
+        <span class="logo-subtitle">3D Print Shop</span>
+      </div>
+      <nav class="main-nav">
+        <ul>
+          <li><a href="index.html">Acasă</a></li>
+          <li><a href="categories.html">Produse</a></li>
+          <li><a href="custom.html">Personalizare</a></li>
+          <li><a href="about.html">Despre</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="cart-nav">Coș (<span id="cart-count">0</span>)</div>
+      <div class="user-nav" id="user-nav"></div>
+    </div>
+  </header>
+
+  <main class="container auth-section">
+    <section>
+      <h2 class="site-title">Autentificare</h2>
+      <!-- fără action, lăsăm JS să trimită JSON -->
+      <form id="login-form">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" name="email" required />
+
+        <label for="login-password">Parolă</label>
+        <input type="password" id="login-password" name="password" required />
+
+        <button type="submit" class="action-btn">Autentifică-te</button>
+        <p>Nu ai cont? <a href="register.html">Înregistrează-te aici</a>.</p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <span class="footer-brand">RXPCUSTOM3D</span>
+    </div>
+  </footer>
+</body>
+</html>

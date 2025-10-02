@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Catalog – RXP CUSTOM3D</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-container">
+      <div class="logo">
+        <span class="logo-title">RXP CUSTOM3D</span>
+        <span class="logo-subtitle">3D Print Shop</span>
+      </div>
+      <nav class="main-nav">
+        <ul>
+          <li><a href="index.html">Acasă</a></li>
+          <li><a href="categories.html">Produse</a></li>
+          <li><a href="custom.html">Personalizare</a></li>
+          <li><a href="index.html#despre">Despre</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="cart-nav">
+        <a href="cart.html">Coș (<span id="cart-count">0</span>)</a>
+      </div>
+      <div class="user-nav" id="user-nav"></div>
+    </div>
+  </header>
+
+  <main class="container categories-page">
+    <h2 class="page-title">CATALOG</h2>
+
+    <!-- Grilă cu 2 carduri statice (pui tu imaginile) -->
+    <div class="category-grid">
+      <!-- Card 1: Car Tuning -->
+      <a class="category-card" href="category.html?slug=car_tuning">
+        <img
+          src="\images\car-tuning.png"  
+          alt="Car Tuning"
+          loading="lazy"
+        />
+        <div class="category-card-name">Car Tuning</div>
+      </a>
+
+      <!-- Card 2: Suporturi Număr -->
+      <a class="category-card" href="category.html?slug=suporti_numar">
+        <img
+          src="\images\suporti-numar-card.png"
+          alt="Suporturi Număr"
+          loading="lazy"
+        />
+        <div class="category-card-name">Suporturi Număr</div>
+      </a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <span class="footer-brand">RXPCUSTOM3D</span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8" />
+  <title>Detalii comandă - Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{--orange:#ff7f00;--muted:#f6f7fb}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:#fff;color:#222}
+    header{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #eee}
+    header .brand{font-weight:700;color:#222}
+    main{max-width:960px;margin:24px auto;padding:0 16px}
+    .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+    h1{margin:0 0 12px;font-size:20px}
+    h2{margin:24px 0 8px;font-size:16px;color:#444}
+    .row{display:grid;grid-template-columns:160px 1fr;gap:8px;margin:6px 0}
+    .muted{color:#666}
+    .pill{display:inline-block;background:var(--muted);padding:4px 8px;border-radius:999px;font-size:12px}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+    .right{text-align:right}
+    .totals{margin-top:10px;display:grid;gap:6px;justify-content:end}
+    .totals .line{display:grid;grid-template-columns:180px 120px;gap:12px}
+    .btn{appearance:none;border:0;background:var(--orange);color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer}
+    .toolbar{display:flex;gap:8px;align-items:center}
+    input[type=text]{padding:8px 10px;border:1px solid #ddd;border-radius:8px;width:280px}
+    a.back{color:#222;text-decoration:none;border:1px solid #ddd;padding:8px 10px;border-radius:8px;background:#fff}
+    @media (max-width:720px){
+      .row{grid-template-columns:1fr}
+      .totals .line{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">Admin RXP (local)</div>
+  <div class="toolbar">
+    <a class="back" href="./">← Înapoi</a>
+    <input id="jwt" type="text" placeholder="Token admin" />
+    <button id="saveToken" class="btn">Salvează token</button>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <h1>Detalii comandă <span id="oid" class="pill"></span></h1>
+
+    <div class="row"><div class="muted">Status</div><div id="status">-</div></div>
+    <div class="row"><div class="muted">Data</div><div id="created_at">-</div></div>
+    <div class="row"><div class="muted">Metodă plată</div><div id="payment_method">-</div></div>
+
+    <h2>Client & livrare</h2>
+    <div class="row"><div class="muted">Nume</div><div id="billing_name">-</div></div>
+    <div class="row"><div class="muted">Telefon</div><div id="phone">-</div></div>
+    <div class="row"><div class="muted">Adresă</div><div id="shipping_address">-</div></div>
+
+    <h2>Produse</h2>
+    <table>
+      <thead>
+        <tr><th>Produs</th><th class="right">Cant.</th><th class="right">Preț</th><th class="right">Subtotal</th></tr>
+      </thead>
+      <tbody id="items"></tbody>
+    </table>
+
+    <div class="totals">
+      <div class="line"><div class="muted right">Produse</div><div class="right" id="subtotal"></div></div>
+      <div class="line"><div class="muted right">Transport</div><div class="right" id="shipping"></div></div>
+      <div class="line" style="font-weight:700"><div class="right">Total</div><div class="right" id="total"></div></div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const API = '/api';
+  const jwtInput = document.querySelector('#jwt');
+  const saved = localStorage.getItem('admin_jwt') || localStorage.getItem('admintoken') || '';
+  if (saved) jwtInput.value = saved;
+  document.querySelector('#saveToken').onclick = () => {
+    const t = jwtInput.value.trim();
+    localStorage.setItem('admin_jwt', t);
+    localStorage.setItem('admintoken', t);
+    alert('Token salvat.');
+  };
+
+  // --- helpers ---
+  const qs = s => document.querySelector(s);
+  const param = name => new URLSearchParams(location.search).get(name);
+
+  async function api(path){
+    const token = localStorage.getItem('admin_jwt') || localStorage.getItem('admintoken') || '';
+    const r = await fetch(API + path, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!r.ok){
+      let msg = 'HTTP '+r.status;
+      try { const j = await r.json(); if (j?.detail) msg = j.detail; } catch {}
+      throw new Error(msg);
+    }
+    return r.json();
+  }
+
+  // citește valori din chei posibile, inclusiv dot-notation (ex: "shipping.phone")
+  function deepPick(obj, paths){
+    for (const p of paths){
+      const v = p.split('.').reduce((acc, k) => (acc && acc[k] != null ? acc[k] : undefined), obj);
+      if (v != null && v !== '') return v;
+    }
+    return undefined;
+  }
+
+  // convertește la bani (minor units) din aproape orice reprezentare
+  function toMinor(v) {
+    if (v == null) return null;
+    if (typeof v === 'number') {
+      return v >= 100 ? Math.round(v) : Math.round(v * 100);
+    }
+    if (typeof v === 'string') {
+      const s = v.trim().toLowerCase();
+      if (!s) return null;
+      const norm = s.replace(/\./g, '').replace(',', '.'); // 4.025,00 -> 4025.00
+      const f = parseFloat(norm);
+      if (Number.isFinite(f)) return Math.round(f * 100);
+      const n = parseInt(s, 10);
+      return Number.isFinite(n) ? n : null;
+    }
+    return null;
+  }
+
+  function fmtMinor(minor, curr='RON') {
+    const n = (Number(minor)||0) / 100;
+    return n.toLocaleString('ro-RO', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ' + curr.toUpperCase();
+  }
+
+  async function load(){
+    const id = Number(param('id') || '0');
+    if (!id){ alert('Lipsește id.'); return; }
+    qs('#oid').textContent = '#'+id;
+
+    try{
+      const o = await api('/admin/orders/'+id);
+
+      // --- Status, dată, plată ---
+      const status = (deepPick(o, ['status','order_status']) || '-').toString();
+
+      const createdISO = deepPick(o, [
+        'created_at','created','createdAt','created_on','createdOn','created_ts','createdTs'
+      ]);
+      const createdTxt = createdISO ? new Date(createdISO).toLocaleString('ro-RO') : '-';
+
+      const payMethodRaw = deepPick(o, [
+        'payment_method','pay_method','payment.method','payment.type','payment.name','pay.method'
+      ]);
+      const payMethod = (payMethodRaw || 'COD').toString().toUpperCase();
+
+      // --- Client + livrare ---
+      const fullName = deepPick(o, [
+        'billing_name','shipping_name','customer_name','name',
+        'shipping.name','customer.full_name','customer.name','buyer.name','delivery.name'
+      ]) || '-';
+
+      const phone = deepPick(o, [
+        'phone','customer_phone','shipping_phone',
+        'shipping.phone','customer.phone','buyer.phone','delivery.phone'
+      ]) || '-';
+
+      const address = deepPick(o, [
+        'shipping_address','address','delivery_address',
+        'customer_address',            // <— ADĂUGAT (underscore)
+        'shipping.address','customer.address','buyer.address'
+      ]) || '-';
+
+      if (!address) {
+        const parts = [
+          deepPick(o, ['shipping.street','shipping.street1','shipping.line1']),
+          deepPick(o, ['shipping.street2','shipping.line2']),
+          deepPick(o, ['shipping.city']),
+          deepPick(o, ['shipping.postcode','shipping.zip']),
+          deepPick(o, ['shipping.country'])
+        ].filter(Boolean);
+        address = parts.length ? parts.join(', ') : '-';
+      }
+
+      const currency = (deepPick(o, ['currency']) || 'RON').toString().toUpperCase();
+
+      // --- Produse ---
+      const rawItems = Array.isArray(o.items) ? o.items : [];
+
+      function itemName(it){
+        return deepPick(it, ['product_name','name','product.name','product.sku']) ||
+               ('#' + (deepPick(it, ['product_id','productId']) ?? '?'));
+      }
+      function itemQty(it){
+        return Number(deepPick(it, ['quantity','qty'])) || 1;
+      }
+      function unitMinor(it){
+        // în ordine: unit_price / price / product.price sau derivat din subtotal/qty
+        const v = toMinor(deepPick(it, ['unit_price','unitPrice','price','price_minor','priceMinor','product.price']));
+        if (v != null) return v;
+        const sub = toMinor(deepPick(it, ['subtotal','line_total','total']));
+        const q   = itemQty(it);
+        return sub != null ? Math.round(sub / q) : 0;
+      }
+      function subMinor(it){
+        const v = toMinor(deepPick(it, ['subtotal','line_total','total']));
+        if (v != null) return v;
+        return unitMinor(it) * itemQty(it);
+      }
+
+      const rows = rawItems.map(it => ({
+        name: itemName(it),
+        qty : itemQty(it),
+        unit: unitMinor(it),
+        sub : subMinor(it),
+      }));
+
+      const subtotalMinor = rows.reduce((s,r)=> s + r.sub, 0);
+
+      // --- Transport + total ---
+      let shippingMinor = toMinor(deepPick(o, [
+        'shipping_fee_minor','shipping_fee','shipping.amount','shipping.total',
+        'delivery_fee_minor','delivery_fee','delivery.amount',
+        'transport_fee_minor','transport_fee','transport'
+      ]));
+
+      let totalMinor = toMinor(deepPick(o, [
+        'total_amount','total_minor','total','amount','grand_total','grandTotal'
+      ]));
+
+      // deducem transportul dacă nu e în payload DAR totalul există
+      if (shippingMinor == null && totalMinor != null) {
+        shippingMinor = Math.max(0, totalMinor - subtotalMinor);
+      }
+      // dacă nu avem total, îl calculăm
+      if (totalMinor == null) {
+        totalMinor = subtotalMinor + (shippingMinor || 0);
+      }
+
+      // --- scriem în UI ---
+      qs('#status').textContent         = status;
+      qs('#created_at').textContent     = createdTxt;
+      qs('#payment_method').textContent = payMethod;
+
+      qs('#billing_name').textContent   = fullName;
+      qs('#phone').textContent          = phone;
+      qs('#shipping_address').textContent = address;
+
+      const tbody = qs('#items');
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.name}</td>
+          <td class="right">${r.qty}</td>
+          <td class="right">${fmtMinor(r.unit, currency)}</td>
+          <td class="right">${fmtMinor(r.sub, currency)}</td>
+        </tr>
+      `).join('') || `<tr><td colspan="4" class="muted">Nu există produse.</td></tr>`;
+
+      qs('#subtotal').textContent = fmtMinor(subtotalMinor, currency);
+      qs('#shipping').textContent = fmtMinor(shippingMinor || 0, currency);
+      qs('#total').textContent    = fmtMinor(totalMinor, currency);
+
+    } catch(e){
+      console.error(e);
+      alert('Nu am putut încărca comanda.\n' + e.message);
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

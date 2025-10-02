@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Shop Demo</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;margin:20px;line-height:1.4}
+    .card{border:1px solid #ddd;border-radius:12px;padding:16px;margin-bottom:16px}
+    input,button,select{padding:8px;border:1px solid #ccc;border-radius:8px}
+    button{cursor:pointer}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    pre{background:#f6f8fa;padding:12px;border-radius:8px;overflow:auto}
+  </style>
+</head>
+<body>
+  <h1>Shop Demo</h1>
+
+  <div class="card">
+    <h2>Auth</h2>
+    <div class="row">
+      <input id="email" placeholder="email" value="test@example.com"/>
+      <input id="pass" placeholder="parola" type="password" value="Parola123!"/>
+      <button onclick="register()">Înregistrare</button>
+      <button onclick="login()">Login</button>
+    </div>
+    <p>Token: <code id="token"></code></p>
+  </div>
+
+  <div class="card">
+    <h2>Produse</h2>
+    <div class="row">
+      <input id="sku" placeholder="SKU" value="SKU-001"/>
+      <input id="name" placeholder="Nume" value="Produs demo"/>
+      <input id="price" placeholder="Preț (bani/centi)" value="1999"/>
+      <input id="stock" placeholder="Stoc" value="10"/>
+      <button onclick="createProduct()">Creează produs</button>
+      <button onclick="listProducts()">Listă produse</button>
+    </div>
+    <pre id="products"></pre>
+  </div>
+
+  <div class="card">
+    <h2>Coș</h2>
+    <div class="row">
+      <input id="pid" placeholder="Product ID" value="1"/>
+      <input id="qty" placeholder="Cantitate" value="1"/>
+      <button onclick="addToCart()">Adaugă în coș</button>
+      <button onclick="getCart()">Vezi coș</button>
+    </div>
+    <div class="row">
+      <input id="itemId" placeholder="Cart Item ID"/>
+      <input id="newQty" placeholder="Noua cantitate"/>
+      <button onclick="updateQty()">Update qty</button>
+      <button onclick="clearCart()">Golește coș</button>
+    </div>
+    <pre id="cart"></pre>
+  </div>
+
+  <div class="card">
+    <h2>Comandă</h2>
+    <button onclick="checkoutCOD()">Plasează comandă (ramburs)</button>
+    <button onclick="listOrders()">Istoric comenzi</button>
+    <pre id="orders"></pre>
+  </div>
+
+  <div class="card">
+    <h2>Custom Request</h2>
+    <form id="cr" onsubmit="sendCR(event)">
+      <div class="row">
+        <input name="email" placeholder="email" value="client@example.com"/>
+        <input name="description" placeholder="descriere"/>
+        <input name="files" type="file" multiple />
+        <button type="submit">Trimite</button>
+      </div>
+    </form>
+    <pre id="crout"></pre>
+  </div>
+
+<script>
+const API = location.origin.replace(/:\d+$/, ':8000');
+let TOKEN = "";
+
+function setToken(t){ TOKEN=t; document.getElementById('token').textContent = t ? (t.slice(0,24)+'...') : ''; }
+async function register(){
+  const email=document.getElementById('email').value, password=document.getElementById('pass').value;
+  const r = await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+  alert(r.ok ? 'Înregistrat' : 'Eșec');
+}
+
+async function login(){
+  const email=document.getElementById('email').value, password=document.getElementById('pass').value;
+  const r = await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+  const d= await r.json(); setToken(d.access_token||"");
+}
+
+async function createProduct(){
+  const payload={
+    sku:document.getElementById('sku').value,
+    name:document.getElementById('name').value,
+    description:'',
+    price:parseInt(document.getElementById('price').value||'0',10),
+    currency:'ron',
+    stock:parseInt(document.getElementById('stock').value||'0',10),
+    is_active:true
+  };
+  const r = await fetch(API+'/products',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  document.getElementById('products').textContent = JSON.stringify(await r.json(),null,2);
+}
+
+async function listProducts(){
+  const r = await fetch(API+'/products'); document.getElementById('products').textContent = JSON.stringify(await r.json(),null,2);
+}
+
+async function addToCart(){
+  const payload={product_id:parseInt(document.getElementById('pid').value,10),quantity:parseInt(document.getElementById('qty').value,10)};
+  const r = await fetch(API+'/cart',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  document.getElementById('cart').textContent = JSON.stringify(await r.json(),null,2);
+}
+
+async function getCart(){
+  const r = await fetch(API+'/cart',{headers:{'Authorization':'Bearer '+TOKEN}});
+  document.getElementById('cart').textContent = JSON.stringify(await r.json(),null,2);
+}
+
+async function updateQty(){
+  const id=parseInt(document.getElementById('itemId').value,10), q=parseInt(document.getElementById('newQty').value,10);
+  const r = await fetch(API+'/cart/'+id,{method:'PUT',headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},body:JSON.stringify({quantity:q})});
+  document.getElementById('cart').textContent = JSON.stringify(await r.json(),null,2);
+}
+
+async function clearCart(){
+  const r = await fetch(API+'/cart',{method:'DELETE',headers:{'Authorization':'Bearer '+TOKEN}});
+  document.getElementById('cart').textContent = JSON.stringify(await r.json(),null,2);
+}
+
+async function checkoutCOD(){
+  const r = await fetch(API+'/orders/checkout-cod',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN}});
+  document.getElementById('orders').textContent = JSON.stringify(await r.json(),null,2);
+}
+
+async function listOrders(){
+  const r = await fetch(API+'/orders',{headers:{'Authorization':'Bearer '+TOKEN}});
+  document.getElementById('orders').textContent = JSON.stringify(await r.json(),null,2);
+}
+
+async function sendCR(e){
+  e.preventDefault();
+  const form = document.getElementById('cr');
+  const fd = new FormData(form);
+  const r = await fetch(API+'/custom-requests',{method:'POST',body:fd});
+  document.getElementById('crout').textContent = JSON.stringify(await r.json(),null,2);
+}
+</script>
+</body>
+</html>

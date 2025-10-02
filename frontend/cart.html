@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coș de cumpărături</title>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="script.js"></script>
+    <script>
+    // DEBUG: marchez clar că override-ul a rulat
+    console.log('COD override inline ACTIV — folosesc /orders/checkout-cod');
+
+    async function createCodOrder(payload){
+    console.log('createCodOrder -> POST /orders/checkout-cod', payload);
+    return api('/orders/checkout-cod', { method: 'POST', data: payload });
+    }
+    </script>
+
+</head>
+<body>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container header-container">
+            <div class="logo">
+                <span class="logo-title">RXP CUSTOM3D</span>
+                <span class="logo-subtitle">3D Print Shop</span>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Acasă</a></li>
+                    <li><a href="categories.html">Produse</a></li>
+                    <li><a href="custom.html">Personalizare</a></li>
+                    <li><a href="index.html#despre">Despre</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="cart-nav">
+                <a href="cart.html">Coș (<span id="cart-count">0</span>)</a>
+            </div>
+                <div class="user-nav" id="user-nav"></div>
+            </div>
+        </div>
+    </header>
+    <!-- Main Content -->
+    <main class="cart-page">
+        <div class="container">
+            <h2>Coș de cumpărături</h2>
+            <div id="cart-items" class="cart-items"></div>
+            <div id="cart-total" class="cart-total"></div>
+            <button id="checkout-btn" class="action-btn">Continuă la plată</button>
+            <!-- === Checkout Ramburs === -->
+            <section id="cod-panel" class="checkout-section" style="display:none; margin-top:1rem">
+            <h2>Detalii livrare</h2>
+            <form id="cod-form" style="display:grid;gap:.75rem;max-width:520px">
+                <label>Nume și Prenume
+                <input type="text" name="full_name" required>
+                </label>
+                <label>Telefon
+                <input type="tel" name="phone" required>
+                </label>
+                <label>Adresă de livrare
+                <textarea name="address" rows="3" required></textarea>
+                </label>
+                <div class="checkout-total" style="margin-top:.5rem">
+                <p>Produse: <strong><span id="sum-products">0,00 RON</span></strong></p>
+                <p>Transport: <strong><span id="sum-shipping">25,00 RON</span></strong></p>
+                <p style="font-size:1.1rem">Total de plată: <strong><span id="sum-total">0,00 RON</span></strong></p>
+                </div>
+                <button type="submit" class="action-btn">Plasează comanda</button>
+            </form>
+            </section>
+
+            <!-- Success message -->
+            <section id="success-section" class="hidden success-section">
+                <h2>Plată reușită</h2>
+                <p>Mulțumim pentru comanda dvs!</p>
+                <button id="return-home" class="action-btn">Înapoi la magazin</button>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container footer-container">
+            <span class="footer-brand">RXPCUSTOM3D</span>
+        </div>
+    </footer>
+</body>
+</html>

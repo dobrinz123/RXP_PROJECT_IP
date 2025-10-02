@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contul meu – RXP CUSTOM3D</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-container">
+      <div class="logo">
+        <span class="logo-title">RXP CUSTOM3D</span>
+        <span class="logo-subtitle">3D Print Shop</span>
+      </div>
+      <nav class="main-nav">
+        <ul>
+          <li><a href="index.html">Acasă</a></li>
+          <li><a href="categories.html">Produse</a></li>
+          <li><a href="custom.html">Personalizare</a></li>
+          <li><a href="index.html#despre">Despre</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="cart-nav">
+        <a href="cart.html">Coș (<span id="cart-count">0</span>)</a>
+      </div>
+      <!-- IMPORTANT: lăsăm JS-ul să pună emailul aici -->
+      <div class="user-nav" id="user-nav"></div>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main>
+    <div class="container">
+      <h2>Contul meu</h2>
+      <p id="account-email" style="margin-top:-6px;color:#666"></p>
+
+      <hr style="margin:1rem 0;border:none;height:1px;background:#eee">
+
+      <!-- Schimbă parola -->
+      <section class="auth-section" style="max-width:520px">
+        <h3>Schimbă parola</h3>
+        <form id="change-pass-form" style="display:grid;gap:.6rem">
+          <label>Parola curentă
+            <input type="password" name="current_password" required>
+          </label>
+          <label>Parola nouă
+            <input type="password" name="new_password" required>
+          </label>
+          <label>Confirmă parola nouă
+            <input type="password" name="new_password2" required>
+          </label>
+          <button type="submit" class="action-btn">Salvează</button>
+        </form>
+        <p style="margin-top:.75rem">
+          <a href="#" id="logout-link" style="color:#d9534f">Logout</a>
+        </p>
+      </section>
+
+      <!-- Comenzile mele -->
+      <section class="orders-list" style="margin-top:2rem">
+        <h2>Comenzile mele</h2>
+        <div id="orders-host"><p>Se încarcă…</p></div>
+      </section>
+
+      <!-- Administrare comenzi (vizibil doar pentru admin, dacă vrei mai târziu) -->
+      <section id="admin-orders" class="admin-orders hidden">
+        <h2>Administrare comenzi (Admin)</h2>
+        <div id="all-orders-list" class="orders-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <span class="footer-brand">RXPCUSTOM3D</span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Invoice Viewer</title>
+<label>API <input id="api" value="http://127.0.0.1:8000"></label><br>
+<label>Order ID <input id="oid" value="1"></label><br>
+<label>Token <input id="tok" style="width:520px"></label><br>
+<button onclick="openPdf()">Deschide PDF</button>
+<script>
+async function openPdf(){
+  const api=document.getElementById('api').value.replace(/\/$/,'');
+  const id=document.getElementById('oid').value.trim();
+  const tok=document.getElementById('tok').value.trim();
+  const r=await fetch(`${api}/orders/${id}/invoice.pdf`,{headers:{Authorization:`Bearer ${tok}`}});
+  if(!r.ok){ alert('Eroare: '+r.status); return; }
+  const blob=await r.blob(); const url=URL.createObjectURL(blob); window.open(url,'_blank');
+}
+</script>

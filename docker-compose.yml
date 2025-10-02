@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: shopuser
+      POSTGRES_PASSWORD: shopsecret
+      POSTGRES_DB: shopdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.docker
+    depends_on:
+      - db
+    expose:
+      - "8000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+
+  web:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"     # ← doar pe localhost
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./admin_ui:/usr/share/nginx/html_admin:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
