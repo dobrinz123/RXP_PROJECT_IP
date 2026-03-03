@@ -3,11 +3,10 @@ services:
     image: postgres:15
     restart: unless-stopped
     environment:
-      POSTGRES_USER: shopuser
-      POSTGRES_PASSWORD: shopsecret
-      POSTGRES_DB: shopdb
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-shopuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shopsecret}
+      POSTGRES_DB: ${POSTGRES_DB:-shopdb}
+    # port mapped locally optionally, but removed for security
     volumes:
       - pgdata:/var/lib/postgresql/data
 
@@ -18,8 +17,7 @@ services:
       - .env.docker
     depends_on:
       - db
-    ports:
-      - "8000:8000"
+    # port 8000 NU este expus public — accesibil doar intern prin Nginx (S9 fix)
     volumes:
       - ./uploads:/app/uploads
 

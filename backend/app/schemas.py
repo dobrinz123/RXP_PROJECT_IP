@@ -1,3 +1,4 @@
+import os
 from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
 from datetime import datetime
@@ -51,9 +52,12 @@ class CartItemOut(BaseModel):
 
 # === Orders ===
 class OrderItemOut(BaseModel):
-    product: ProductOut
+    # NEW-04: product poate fi None daca produsul a fost sters din DB
+    # (fara Optional → HTTP 500 la GET /orders)
+    product: Optional[ProductOut] = None
     quantity: int
     unit_price: int            # MINOR units (bani)
+    product_id: Optional[int] = None  # util cand product=None
     class Config:
         from_attributes = True
 
@@ -76,7 +80,8 @@ class OrderOut(BaseModel):
 
 # === Checkout & misc ===
 class PaymentIntentCreate(BaseModel):
-    save_order: bool = True
+    # NEW-05: save_order eliminat (camp mort — comanda este intotdeauna salvata, vezi BUG-14)
+    pass
 
 class MeOut(BaseModel):
     id: int
@@ -89,7 +94,24 @@ class CartQtyUpdate(BaseModel):
     quantity: int
 
 class StatusUpdate(BaseModel):
+    status: str  # folosit in admin; validare stricta mai jos
+
+ORDER_STATUSES = [
+    "created", "pending", "paid",
+    "processing",       # status canonical
+    "in_preparation",   # NEW-03: alias legacy (dropdown admin migrat la 'processing')
+    "shipped", "delivered",
+    "cancelled", "canceled",
+]
+
+class OrderStatusUpdate(BaseModel):
+    """Schema cu validare stricta a status-ului comenzii."""
     status: str
+
+    def model_post_init(self, __context):
+        # BUG-30: eliminat __get_validators__ (API Pydantic v1, ignorat in v2)
+        if self.status not in ORDER_STATUSES:
+            raise ValueError(f"Status invalid. Valori acceptate: {ORDER_STATUSES}")
 
 class CustomRequestIn(BaseModel):
     email: EmailStr
@@ -106,13 +128,16 @@ class OrderItemIn(BaseModel):
     quantity: int = Field(ge=1)
 
 class OrderCreateCOD(BaseModel):
-    # Folosim coÈ™ul server-side; items sunt opÈ›ionale (dacÄƒ vrei, poÈ›i valida aici cu lista din coÈ™)
-    customer: CustomerInfo
-    shipping_fee_minor: int = 2500    # 25 RON Ã®n bani
-    items: Optional[List[OrderItemIn]] = None  # ignorat de backend; pÄƒstrat pt. compat
     full_name: str = Field(..., min_length=2)
     phone: str = Field(..., min_length=3)
     address: str = Field(..., min_length=3)
+    # BUG-07: ge=0 previne shipping negativ; le=50000 = max 500 RON transport
+    shipping_fee_minor: int = Field(
+        default_factory=lambda: int(os.getenv("CASH_ON_DELIVERY_FEE_MINOR", "2500")),
+        ge=0,
+        le=50000
+    )
+    items: Optional[List[OrderItemIn]] = None  # ignorat de backend; pastrat pt. compat
 
 class AdminOrderItemOut(BaseModel):
     product: ProductOut      # ai deja ProductOut Ã®n schemas
@@ -120,7 +145,7 @@ class AdminOrderItemOut(BaseModel):
     unit_price: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class AdminOrderOut(BaseModel):
     id: int
@@ -137,4 +162,16 @@ class AdminOrderOut(BaseModel):
     invoice_no: Optional[str] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+# === Company Settings ===
+class CompanySettingsSchema(BaseModel):
+    name:         Optional[str] = None
+    cif:          Optional[str] = None
+    reg_com:      Optional[str] = None
+    address:      Optional[str] = None
+    bank_account: Optional[str] = None
+
+    class Config:
+        from_attributes = True

@@ -1,19 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from typing import List
-from ..database import SessionLocal
 from ..models import CartItem, Product
 from ..schemas import CartItemIn, CartItemOut, CartQtyUpdate
-from ..deps import current_user_id
+from ..deps import current_user_id, get_db  # BUG-27: import get_db din deps
 
 router = APIRouter(prefix="/cart", tags=["cart"])
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 @router.get("", response_model=List[CartItemOut])
 def get_cart(db: Session = Depends(get_db), user_id: int = Depends(current_user_id)):
@@ -27,7 +19,11 @@ def add_to_cart(payload: CartItemIn, db: Session = Depends(get_db), user_id: int
         raise HTTPException(status_code=400, detail="Produs indisponibil")
     item = db.query(CartItem).filter(CartItem.user_id == user_id, CartItem.product_id == payload.product_id).first()
     if item:
-        item.quantity += payload.quantity
+        # BUG-11: verifica stoc total inainte de a merge cantitatea
+        new_qty = item.quantity + payload.quantity
+        if product.stock < new_qty:
+            raise HTTPException(status_code=400, detail=f"Stoc insuficient. Disponibil: {product.stock}")
+        item.quantity = new_qty
     else:
         item = CartItem(user_id=user_id, product_id=payload.product_id, quantity=payload.quantity)
         db.add(item)
@@ -43,7 +39,8 @@ def update_quantity(item_id: int, payload: CartQtyUpdate, db: Session = Depends(
     if payload.quantity <= 0:
         db.delete(item)
         db.commit()
-        raise HTTPException(status_code=200, detail="Șters")
+        # BUG-02: Return 204 No Content (nu un dict incompatibil cu response_model)
+        return Response(status_code=204)
     if item.product.stock < payload.quantity:
         raise HTTPException(status_code=400, detail="Stoc insuficient")
     item.quantity = payload.quantity

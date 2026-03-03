@@ -1,19 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from ..database import SessionLocal
 from ..models import User
 from ..schemas import UserCreate, UserLogin, UserOut
 from ..security import hash_password, verify_password, create_token
-from ..deps import current_user_id
+from ..deps import current_user_id, get_db  # BUG-27: import get_db din deps, nu redefinit local
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 @router.post("/register", response_model=UserOut)
 def register(payload: UserCreate, db: Session = Depends(get_db)):
@@ -27,14 +20,57 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
     return user
 
 @router.post("/login")
-def login(payload: UserLogin, db: Session = Depends(get_db)):
+def login(payload: UserLogin, response: Response, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email).first()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Date incorecte")
     token = create_token(user.id)
-    return {"access_token": token, "token_type": "bearer"}
+    # SEC-01: stocam tokenul in cookie HttpOnly — inaccesibil din JavaScript (protectie XSS)
+    # secure=True obligatoriu in productie cu HTTPS (SEC-04); samesite="lax" pentru protectie CSRF
+    response.set_cookie(
+        key="auth_token",
+        value=token,
+        httponly=True,
+        samesite="lax",
+        max_age=7 * 24 * 3600,   # 7 zile — trebuie sa corespunda cu timedelta din create_token()
+        secure=False,   # schimba la True dupa activarea HTTPS (SEC-04)
+    )
+    return {"ok": True}
+
+@router.post("/logout")
+def logout(response: Response):
+    # SEC-01: stergem cookie-ul la logout
+    response.delete_cookie(key="auth_token", httponly=True, samesite="lax")
+    return {"ok": True}
 
 @router.get("/me", response_model=UserOut)
 def me(db: Session = Depends(get_db), user_id: int = Depends(current_user_id)):
     user = db.get(User, user_id)
+    # BUG-03: user poate fi None daca a fost sters din DB dar token-ul e inca valid
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User inexistent")
     return user
+
+
+class ChangePasswordPayload(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@router.post("/change-password")
+def change_password(
+    payload: ChangePasswordPayload,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(current_user_id),
+):
+    """BUG-12: Endpoint schimbare parola (lipsea complet din backend)."""
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User inexistent")
+    if not verify_password(payload.current_password, user.password_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Parola curenta incorecta")
+    if len(payload.new_password) < 6:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Parola noua prea scurta (min 6 caractere)")
+    user.password_hash = hash_password(payload.new_password)
+    db.commit()
+    return {"ok": True, "detail": "Parola schimbata cu succes"}

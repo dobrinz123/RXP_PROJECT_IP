@@ -3,19 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from ..database import SessionLocal
 from ..models import Product
 from ..schemas import ProductIn, ProductOut
-from ..deps import admin_required
+from ..deps import admin_required, get_db  # BUG-27: import get_db din deps
 
 router = APIRouter(prefix="/products", tags=["products"])
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 # ---------- PUBLIC ----------
 @router.get("", response_model=List[ProductOut])
@@ -42,7 +34,8 @@ def list_products(
 @router.get("/{product_id}", response_model=ProductOut)
 def get_product(product_id: int, db: Session = Depends(get_db)):
     p = db.get(Product, product_id)
-    if not p:
+    # BUG-10: produsele inactive nu trebuie accesibile public prin ID direct
+    if not p or not p.is_active:
         raise HTTPException(status_code=404, detail="Produs inexistent")
     return p
 

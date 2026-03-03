@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from .security import decode_token
@@ -14,11 +14,19 @@ def get_db():
     finally:
         db.close()
 
-def current_user_id(credentials: HTTPAuthorizationCredentials = Depends(auth_scheme)) -> int:
-    if not credentials:
+def current_user_id(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(auth_scheme),
+) -> int:
+    # SEC-01: citim tokenul din cookie HttpOnly mai întâi (frontend web cu credentials: 'include')
+    # Dacă nu există cookie, fallback la Authorization: Bearer (Swagger UI / API clients externi)
+    token = request.cookies.get("auth_token")
+    if not token and credentials:
+        token = credentials.credentials
+    if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Auth necesar")
     try:
-        return decode_token(credentials.credentials)
+        return decode_token(token)
     except Exception:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalid")
 

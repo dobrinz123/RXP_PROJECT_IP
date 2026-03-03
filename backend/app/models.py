@@ -26,14 +26,14 @@ class Product(Base):
     is_active = Column(Boolean, default=True)
     image_url = Column(Text, nullable=True) 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    category = Column(String(50), nullable=True)    # ex: 'car_tuning', 'suporti_numar'
-    tags = Column(ARRAY(String), nullable=False, default=[])  # ex: ['mercedes','bmw']
+    category = Column(String(50), nullable=True, index=True)    # ex: 'car_tuning', 'suporti_numar'
+    tags = Column(ARRAY(String), nullable=False, default=list)  # BUG-25: default=list (nu []), evita shared mutable
 
 class CartItem(Base):
     __tablename__ = "cart_items"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), index=True)
     quantity = Column(Integer, nullable=False, default=1)
     user = relationship("User", back_populates="cart_items")
     product = relationship("Product")
@@ -41,10 +41,10 @@ class CartItem(Base):
 class Order(Base):
     __tablename__ = "orders"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), index=True)
     total_amount = Column(Integer, nullable=False)
     currency = Column(String(8), default="ron")
-    status = Column(String(32), default="created")
+    status = Column(String(32), default="created", index=True)
 
     # NOU
     shipping_fee_minor = Column(Integer, nullable=True)
@@ -52,7 +52,7 @@ class Order(Base):
     customer_phone     = Column(String(50), nullable=True)
     customer_address   = Column(String(500), nullable=True)
 
-    stripe_payment_intent = Column(String(128), nullable=True)
+    stripe_payment_intent = Column(String(128), nullable=True, index=True)
     invoice_no = Column(String(64), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -62,9 +62,21 @@ class Order(Base):
 class OrderItem(Base):
     __tablename__ = "order_items"
     id = Column(Integer, primary_key=True, index=True)
-    order_id = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"))
+    order_id = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"), index=True)
     product_id = Column(Integer, ForeignKey("products.id"))
     quantity = Column(Integer, nullable=False, default=1)
     unit_price = Column(Integer, nullable=False)
     order = relationship("Order", back_populates="items")
     product = relationship("Product")
+
+
+class CompanySettings(Base):
+    """Singleton row (id=1) with company fiscal/invoice details."""
+    __tablename__ = "company_settings"
+    id             = Column(Integer, primary_key=True, default=1)
+    name           = Column(String(255), nullable=True)   # Denumire firmă
+    cif            = Column(String(64),  nullable=True)   # CIF / CUI
+    reg_com        = Column(String(128), nullable=True)   # Registrul Comerțului
+    address        = Column(String(500), nullable=True)   # Adresă sediu
+    bank_account   = Column(String(128), nullable=True)   # Cont bancar IBAN
+

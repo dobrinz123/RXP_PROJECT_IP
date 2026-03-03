@@ -1,24 +1,19 @@
-import os, stripe
+import os, stripe, logging
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from ..database import SessionLocal
 from ..models import CartItem, Order, OrderItem, Product
 from ..schemas import PaymentIntentCreate
-from ..deps import current_user_id
+from ..deps import current_user_id, get_db  # BUG-27: import get_db din deps (nu redefinit local)
 from dotenv import load_dotenv
 
 load_dotenv()
 stripe.api_key = os.getenv("STRIPE_API_KEY")
 CURRENCY = os.getenv("CURRENCY", "ron")
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/payments", tags=["payments"])
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 def compute_amount(db: Session, user_id: int) -> int:
     items = db.query(CartItem).filter(CartItem.user_id == user_id).all()
@@ -28,7 +23,7 @@ def compute_amount(db: Session, user_id: int) -> int:
             raise HTTPException(status_code=400, detail="Stoc insuficient")
         total += i.product.price * i.quantity
     if total <= 0:
-        raise HTTPException(status_code=400, detail="Coș gol")
+        raise HTTPException(status_code=400, detail="Cos gol")
     return total
 
 @router.post("/create-payment-intent")
@@ -37,10 +32,10 @@ def create_payment_intent(payload: PaymentIntentCreate, db: Session = Depends(ge
         raise HTTPException(status_code=400, detail="Stripe neconfigurat")
     amount = compute_amount(db, user_id)
     intent = stripe.PaymentIntent.create(amount=amount, currency=CURRENCY, automatic_payment_methods={"enabled": True})
-    if payload.save_order:
-        order = Order(user_id=user_id, total_amount=amount, currency=CURRENCY, status="pending", stripe_payment_intent=intent["id"])
-        db.add(order)
-        db.commit()
+    # BUG-14: intotdeauna salveaza comanda (nu optional) ca webhook sa o gaseasca
+    order = Order(user_id=user_id, total_amount=amount, currency=CURRENCY, status="pending", stripe_payment_intent=intent["id"])
+    db.add(order)
+    db.commit()
     return {"client_secret": intent["client_secret"]}
 
 @router.post("/webhook")
@@ -49,20 +44,58 @@ async def webhook(request: Request, db: Session = Depends(get_db)):
     payload = await request.body()
     sig = request.headers.get("stripe-signature")
     if not secret:
-        return {"ok": False, "error": "Webhook secret missing"}
+        logger.error("STRIPE_WEBHOOK_SECRET is not configured")
+        return JSONResponse(status_code=400, content={"ok": False, "error": "Webhook secret missing"})
     try:
         event = stripe.Webhook.construct_event(payload, sig, secret)
+    except stripe.error.SignatureVerificationError as e:
+        logger.warning(f"Stripe signature verification failed: {e}")
+        return JSONResponse(status_code=400, content={"ok": False, "error": "Invalid signature"})
     except Exception as e:
-        return {"ok": False, "error": "invalid signature"}
+        logger.error(f"Stripe webhook error: {e}")
+        return JSONResponse(status_code=400, content={"ok": False, "error": "Webhook processing error"})
+
     if event["type"] == "payment_intent.succeeded":
         pi = event["data"]["object"]
-        order = db.query(Order).filter(Order.stripe_payment_intent == pi["id"]).first()
+        # BUG-13: foloseste with_for_update() pentru a preveni race condition (webhook retrimis)
+        order = db.query(Order).filter(Order.stripe_payment_intent == pi["id"]).with_for_update().first()
         if order and order.status != "paid":
             items = db.query(CartItem).filter(CartItem.user_id == order.user_id).all()
             for ci in items:
-                oi = OrderItem(order_id=order.id, product_id=ci.product_id, quantity=ci.quantity, unit_price=ci.product.price)
+                # Lock produsul pentru a preveni race conditions
+                product = db.query(Product).filter(Product.id == ci.product_id).with_for_update().first()
+
+                # BUG-04: verifica stoc inainte de decrement (evita stoc negativ)
+                if product:
+                    if product.stock < ci.quantity:
+                        logger.error(
+                            "Stoc insuficient la webhook pentru product_id=%s: stock=%s, qty=%s",
+                            ci.product_id, product.stock, ci.quantity
+                        )
+                        # Continua procesarea platii dar inregistreaza eroarea
+                        # (banii au fost luati deja, nu putem refuza comanda)
+                        product.stock = 0
+                    else:
+                        product.stock -= ci.quantity
+
+                # BUG-05: protejeaza impotriva product=None (produs sters intre timp)
+                unit_price = None
+                if product:
+                    unit_price = product.price
+                elif ci.product:
+                    unit_price = ci.product.price
+                # Daca ambele sunt None, foloseste unit_price din CartItem (daca exista) sau 0
+                if unit_price is None:
+                    unit_price = 0
+                    logger.warning("Produs inexistent pentru cart_item_id=%s la procesare webhook", ci.id)
+
+                oi = OrderItem(
+                    order_id=order.id,
+                    product_id=ci.product_id,
+                    quantity=ci.quantity,
+                    unit_price=unit_price
+                )
                 db.add(oi)
-                ci.product.stock -= ci.quantity
                 db.delete(ci)
             order.status = "paid"
             db.commit()
