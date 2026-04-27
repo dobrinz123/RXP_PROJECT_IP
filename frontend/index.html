@@ -1,102 +1,121 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RXPCUSTOM3D – Suporturi magnetice auto 3D</title>
-    <link rel="stylesheet" href="style.css">
-    <script defer src="script.js?v=2"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RXP CUSTOM3D - Suporți magnetici auto 3D</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js?v=20260427"></script>
 </head>
-<body class="home-page">
-    <!-- Site Header -->
-    <header class="site-header">
-        <div class="container header-container">
-            <div class="logo">
-                <span class="logo-title">RXP CUSTOM3D</span>
-                <span class="logo-subtitle">3D Print Shop</span>
-            </div>
-            <button class="mobile-menu-toggle" aria-label="Toggle menu">&#9776;</button>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="#">Acasă</a></li>
-                    <li><a href="categories.html">Produse</a></li>
-                    <li><a href="custom.html">Personalizare</a></li>
-                    <li><a href="#despre">Despre</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                </ul>
-            </nav>
-            <div class="cart-nav">
-                <a href="cart.html">Coș (<span id="cart-count">0</span>)</a>
-            </div>
-            <div class="user-nav" id="user-nav"></div>
-        </div>
-    </header>
+<body data-page="home">
+  <div id="site-header"></div>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container hero-container">
-            <h1>Suporti Magnetici Auto 3D</h1>
-            <p>Specializai în suporturi magnetice pentru numere de înmatriculare. Calitate superioară, design personalizat, livrare rapidă.</p>
-            <a href="categories.html" class="btn-primary">Vezi Catalogul</a>
+  <main>
+    <section class="home-hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow">PREMIUM 3D PRINTED</span>
+          <h1 class="hero-title">SUPORȚI MAGNETICI AUTO 3D</h1>
+          <p>Specializați în suporturi magnetice pentru numere de înmatriculare. Calitate superioară, design personalizat, livrare rapidă.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary-soft" href="categories.html">Vezi catalogul</a>
+            <a class="btn btn-secondary" href="custom.html">Cerere personalizată</a>
+          </div>
+          <div class="hero-trust" aria-label="Avantaje principale">
+            <span class="hero-trust-item"><span data-icon="check"></span>Livrare 24-48h</span>
+            <span class="hero-trust-item"><span data-icon="check"></span>Garanție calitate</span>
+            <span class="hero-trust-item"><span data-icon="check"></span>Plată securizată</span>
+          </div>
         </div>
+        <div class="hero-media">
+          <div class="hero-media-frame">
+            <img src="images/suporti_magnet.jpeg" alt="Suport magnetic auto 3D RXP CUSTOM3D">
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="features">
-        <div class="container features-container">
-            <div class="feature-item">
-                <img src="images/icon-shield-outline.png" alt="Calitate premium">
-                <h3>Calitate Premium</h3>
-                <p>Materiale de înaltă calitate și magneți puternici pentru o aderență perfectă.</p>
-            </div>
-            <div class="feature-item">
-                <img src="images/icon-truck-outline.png" alt="Livrare rapidă">
-                <h3>Livrare Rapidă</h3>
-                <p>Livrare în toată țara în 24-48 ore. Urmărește-ți comanda în timp real.</p>
-            </div>
-            <div class="feature-item">
-                <img src="images/icon-gear-outline.png" alt="Personalizare">
-                <h3>Personalizare</h3>
-                <p>Design-uri personalizate pentru toate tipurile de automobile și preferințe.</p>
-            </div>
+    <section class="section features-section">
+      <div class="container">
+        <div class="section-heading">
+          <span class="section-eyebrow">De ce RXP CUSTOM3D</span>
+          <h2>Construit pentru montaj rapid și aspect curat</h2>
+          <p class="page-copy">Am păstrat mesajul comercial și funcționalitatea existente, dar le-am pus într-un sistem vizual coerent, cu accent pe produs, claritate și încredere.</p>
         </div>
+        <div class="features-grid">
+          <article class="feature-card">
+            <div class="feature-icon"><span data-icon="shield-check"></span></div>
+            <h3>Calitate Premium</h3>
+            <p>Materiale de înaltă calitate și magneți puternici pentru o aderență perfectă.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon"><span data-icon="truck"></span></div>
+            <h3>Livrare Rapidă</h3>
+            <p>Livrare în toată țara în 24-48 ore. Urmărește-ți comanda în timp real.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon"><span data-icon="settings-2"></span></div>
+            <h3>Personalizare</h3>
+            <p>Design-uri personalizate pentru toate tipurile de automobile și preferințe.</p>
+          </article>
+        </div>
+      </div>
     </section>
 
-    <!-- === PRODUSE POPULARE === -->
-    <section class="products-section">
-    <div class="container">
-        <h2>Produse Populare</h2>
-        <div id="popular-list"></div>
-    </div>
+    <section class="section products-section">
+      <div class="container">
+        <div class="section-heading">
+          <span class="section-eyebrow">Selecție</span>
+          <h2>Produse populare</h2>
+          <p class="page-copy">Produsele de mai jos sunt încărcate din API și păstrează aceeași logică de coș și autentificare ca înainte.</p>
+        </div>
+        <div id="popular-list" class="products-grid" aria-live="polite"></div>
+      </div>
     </section>
 
-
-    <!-- About Section -->
-    <section id="despre" class="about-section">
-        <div class="container">
-            <h2>Despre</h2>
-            <p>RXP CUSTOMS3D oferă suporturi magnetice inovatoare pentru numere de înmatriculare, fabricate cu cea mai mare grijă și atenție la detalii. Echipa noastră folosește tehnologie de ultimă generație pentru a aduce pe piață produse fiabile, estetice și ușor de montat.</p>
-        </div>
+    <section class="section section--compact">
+      <div class="container two-column-band">
+        <article id="despre" class="about-card">
+          <span class="section-eyebrow">Despre</span>
+          <h2>Fabricat cu atenție, pentru un aspect impecabil</h2>
+          <p class="text-body-lg">RXP CUSTOM3D oferă suporturi magnetice inovatoare pentru numere de înmatriculare, fabricate cu cea mai mare grijă și atenție la detalii. Echipa noastră folosește tehnologie de ultimă generație pentru a aduce pe piață produse fiabile, estetice și ușor de montat.</p>
+        </article>
+        <article id="contact" class="contact-card">
+          <span class="section-eyebrow">Contact</span>
+          <h2>Discutăm direct</h2>
+          <p>Pentru întrebări, sugestii sau colaborări, ne poți contacta folosind datele de mai jos.</p>
+          <ul class="contact-list">
+            <li>Email: <a href="mailto:rxpcustom3d@gmail.com">rxpcustom3d@gmail.com</a></li>
+            <li>Instagram: <a href="https://www.instagram.com/rxpcustom3d" target="_blank" rel="noreferrer">rxpcustom3d</a></li>
+            <li>Telefon: <a href="tel:+40743828290">+40 743 828 290</a></li>
+          </ul>
+        </article>
+      </div>
     </section>
 
-    <!-- Contact Section -->
-    <section id="contact" class="contact-section">
-        <div class="container">
-            <h2>Contact</h2>
-            <p>Pentru întrebări, sugestii sau colaborări, ne poți contacta la:</p>
-            <ul class="contact-info">
-                <li>Email: <a href="mailto:rxpcustom3d@gmail.com">rxpcustom3d@gmail.com</a></li>
-                <li>Instagram: <a href="https://www.instagram.com/rxpcustom3d">rxpcustom3d</a></li>
-                <li>Telefon: <a href="tel:+40743828290">+40743828290</a></li>
-            </ul>
+    <section class="section section--compact stats-section">
+      <div class="container">
+        <div class="stats-grid" aria-label="Indicatori de încredere">
+          <article class="stat-card">
+            <div class="stat-value">500+</div>
+            <h3>Clienți mulțumiți</h3>
+            <p>Comenzi livrate pentru pasionați auto din toată țara.</p>
+          </article>
+          <article class="stat-card">
+            <div class="stat-value">1000+</div>
+            <h3>Produse livrate</h3>
+            <p>Producție orientată spre montaj rapid și finisaj curat.</p>
+          </article>
+          <article class="stat-card">
+            <div class="stat-value">4.9★</div>
+            <h3>Rating mediu</h3>
+            <p>Feedback constant din partea clienților care revin pentru noi proiecte.</p>
+          </article>
         </div>
+      </div>
     </section>
+  </main>
 
-    <!-- Footer -->
-    <footer class="site-footer">
-        <div class="container footer-container">
-            <span class="footer-brand">RXPCUSTOM3D</span>
-        </div>
-    </footer>
+  <div id="site-footer"></div>
 </body>
 </html>

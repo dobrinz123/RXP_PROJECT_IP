@@ -1,65 +1,63 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cerere produs personalizat – RXP CUSTOM3D</title>
-    <link rel="stylesheet" href="style.css">
-    <script defer src="script.js?v=2"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cerere produs personalizat - RXP CUSTOM3D</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js?v=20260427"></script>
 </head>
-<body>
-    <!-- Header -->
-    <header class="site-header">
-        <div class="container header-container">
-            <div class="logo">
-                <span class="logo-title">RXP CUSTOM3D</span>
-                <span class="logo-subtitle">3D Print Shop</span>
-            </div>
-            <button class="mobile-menu-toggle" aria-label="Toggle menu">&#9776;</button>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="index.html">Acasă</a></li>
-                    <li><a href="categories.html">Produse</a></li>
-                    <li><a href="custom.html">Personalizare</a></li>
-                    <li><a href="index.html#despre">Despre</a></li>
-                    <li><a href="index.html#contact">Contact</a></li>
-                </ul>
-            </nav>
-            <div class="cart-nav">
-                <a href="cart.html">Coș (<span id="cart-count">0</span>)</a>
-            </div>
-                <div class="user-nav" id="user-nav"></div>
+<body data-page="custom">
+  <div id="site-header"></div>
+
+  <main class="page-shell">
+    <div class="container" style="max-width: 640px;">
+      <section class="form-card">
+        <div class="page-intro">
+          <span class="section-eyebrow">Personalizare</span>
+          <h1 class="page-title">Cerere produs personalizat</h1>
+          <p class="page-copy">Completează formularul de mai jos pentru a solicita un produs personalizat. Atașează imagini de referință și descrie în detaliu ce îți dorești.</p>
         </div>
-    </header>
-    
-    <!-- Main Content -->
-    <main>
-        <section class="custom-section">
-            <h2>Cerere produs personalizat</h2>
-            <p style="text-align:center; color:var(--light-text); margin-bottom:1rem;">Completează formularul de mai jos pentru a solicita un produs personalizat. Atașează imagini de referință și descrie în detaliu ce îți dorești. Cererea va fi trimisă pe email-ul nostru.</p>
-            <!-- Success message (hidden initially) -->
-            <div id="custom-success" class="hidden" style="text-align:center; color:var(--primary-color); margin-bottom:1rem;">
-                Cererea a fost generată în clientul de email. Vă rugăm să verificați și să trimiteți emailul.
-            </div>
-            <form id="custom-form">
-                <label for="custom-name">Nume complet</label>
-                <input type="text" id="custom-name" required>
-                <label for="custom-email">Email</label>
-                <input type="email" id="custom-email" required>
-                <label for="custom-description">Descriere produs</label>
-                <textarea id="custom-description" rows="4" required></textarea>
-                <label for="custom-files">Atașează imagini (opțional)</label>
-                <input type="file" id="custom-files" accept="image/*" multiple>
-                <button type="submit" class="action-btn">Trimite cererea</button>
-            </form>
-        </section>
-    </main>
-    
-    <!-- Footer -->
-    <footer class="site-footer">
-        <div class="container footer-container">
-            <span class="footer-brand">RXPCUSTOM3D</span>
-        </div>
-    </footer>
+
+        <p id="custom-success" class="status-message success hidden" role="status" aria-live="polite"></p>
+
+        <form id="custom-form" novalidate>
+          <div class="field" data-field="name">
+            <label class="field-label" for="custom-name">Nume complet</label>
+            <input class="input" type="text" id="custom-name" name="name" placeholder="Ex. Andrei Popescu" required>
+            <p class="field-error" hidden></p>
+          </div>
+
+          <div class="field" data-field="email">
+            <label class="field-label" for="custom-email">Email</label>
+            <input class="input" type="email" id="custom-email" name="email" placeholder="tu@exemplu.ro" required>
+            <p class="field-error" hidden></p>
+          </div>
+
+          <div class="field" data-field="description">
+            <label class="field-label" for="custom-description">Descriere produs</label>
+            <textarea class="textarea" id="custom-description" name="description" placeholder="Spune-ne ce model vrei, pentru ce mașină și ce preferințe ai." required></textarea>
+            <p class="field-error" hidden></p>
+          </div>
+
+          <div class="field" data-field="files">
+            <span class="field-label">Fișiere de referință</span>
+            <label id="custom-dropzone" class="dropzone" for="custom-files">
+              <span data-icon="upload"></span>
+              <strong>Trage fișierele aici sau apasă pentru a alege</strong>
+              <span class="dropzone-copy">PNG, JPG, PDF, STL până la 5MB</span>
+            </label>
+            <input class="visually-hidden" type="file" id="custom-files" accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.stl,.obj,.step,.stp" multiple>
+            <div id="file-preview-grid" class="file-preview-grid"></div>
+            <p class="field-error" hidden></p>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full">Trimite cererea</button>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
 </body>
 </html>

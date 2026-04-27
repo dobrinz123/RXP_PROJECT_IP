@@ -1,903 +1,1648 @@
-// === CONFIG ===
 const API_BASE = '/api';
-const SHIPPING_MINOR = 2500; // 25 RON transport
+const SHIPPING_MINOR = 2500;
+const CURRENT_PAGE = document.body.dataset.page || '';
+const ALLOWED_UPLOAD_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf', '.stl', '.obj', '.step', '.stp'];
+const MAX_UPLOAD_FILES = 5;
+const MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
 
-function toMinor(v) { return v >= 100 ? v : Math.round(v * 100); }
-function fromMinorText(min) { return (min / 100).toFixed(2).replace('.', ',') + ' RON'; }
+const ICONS = {
+  check: '<path d="m20 6-11 11-5-5"></path>',
+  menu: '<path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h16"></path>',
+  x: '<path d="m18 6-12 12"></path><path d="m6 6 12 12"></path>',
+  user: '<path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle>',
+  'chevron-down': '<path d="m6 9 6 6 6-6"></path>',
+  'shopping-cart': '<circle cx="9" cy="20" r="1"></circle><circle cx="18" cy="20" r="1"></circle><path d="M5 5h2l3 9h9l3-7H8"></path>',
+  'shield-check': '<path d="m12 22 7-4V7l-7-5-7 5v11l7 4z"></path><path d="m9 12 2 2 4-4"></path>',
+  truck: '<path d="M14 18H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h9v13Z"></path><path d="M14 9h4l3 3v4a2 2 0 0 1-2 2h-5"></path><circle cx="7.5" cy="18.5" r="1.5"></circle><circle cx="17.5" cy="18.5" r="1.5"></circle>',
+  'settings-2': '<path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="7" r="3"></circle><circle cx="8" cy="17" r="3"></circle>',
+  upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5-5 5 5"></path><path d="M12 15V5"></path>',
+  package: '<path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path>',
+  home: '<path d="m3 11 9-8 9 8"></path><path d="M9 22V12h6v10"></path>',
+  lock: '<rect width="18" height="11" x="3" y="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>',
+  receipt: '<path d="M4 2h16v20l-4-2-4 2-4-2-4 2Z"></path><path d="M8 7h8"></path><path d="M8 11h8"></path><path d="M8 15h5"></path>',
+  'log-out': '<path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path><path d="M13 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8"></path>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle>',
+  'eye-off': '<path d="m3 3 18 18"></path><path d="M10.6 10.6A3 3 0 0 0 12 15a3 3 0 0 0 2.4-4.4"></path><path d="M9.9 5.1A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a17.8 17.8 0 0 1-4 4.7"></path><path d="M6.2 6.2A18.8 18.8 0 0 0 2 12s3.6 7 10 7a9.7 9.7 0 0 0 4-.9"></path>',
+  'trash-2': '<path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path>',
+  'arrow-right': '<path d="M5 12h14"></path><path d="m13 5 7 7-7 7"></path>',
+  star: '<path d="m12 17.3-6.18 3.7 1.64-7.03L2 9.24l7.19-.61L12 2l2.81 6.63 7.19.61-5.46 4.73L18.18 21z"></path>',
+  'layout-grid': '<rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect>',
+  'layout-list': '<rect width="18" height="5" x="3" y="4" rx="1"></rect><rect width="18" height="5" x="3" y="15" rx="1"></rect>',
+  facebook: '<path d="M17 2h-3a5 5 0 0 0-5 5v3H6v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3V2Z"></path>',
+  instagram: '<rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37a4 4 0 1 1-4.37-4.37 4 4 0 0 1 4.37 4.37Z"></path><path d="M17.5 6.5h.01"></path>',
+  tiktok: '<path d="M14 4v9.5a3.5 3.5 0 1 1-3.5-3.5"></path><path d="M14 4c1.2 2.5 3 4 5 4"></path>'
+};
 
-// === HELPERS ===
-function qs(sel) { return document.querySelector(sel); }
-function fmtPrice(minor, currency = 'ron') { return (minor / 100).toFixed(2).replace('.', ',') + ' ' + currency.toUpperCase(); }
-function param(name) { return new URLSearchParams(location.search).get(name); }
-function imgOr(url) { return url || '/placeholder.jpg'; }
-async function getJSON(path) {
-  const r = await fetch(API_BASE + path, { cache: 'no-store', credentials: 'include' });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  return r.json();
+function qs(selector, root = document) {
+  return root.querySelector(selector);
 }
 
-// === GENERIC API (cu auth) ===
-async function api(path, { method = 'GET', data = null } = {}) {
-  const headers = {};
-  // SEC-01: tokenul e trimis automat de browser prin cookie HttpOnly (credentials: 'include')
-  // Nu mai e nevoie de localStorage sau Authorization header
-  if (data) headers['Content-Type'] = 'application/json';
-  const res = await fetch(API_BASE + path, {
+function qsa(selector, root = document) {
+  return Array.from(root.querySelectorAll(selector));
+}
+
+function escapeHtml(value = '') {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
+}
+
+function currentRelativeUrl() {
+  const file = location.pathname.split('/').pop() || 'index.html';
+  return `${file}${location.search}${location.hash}`;
+}
+
+function param(name) {
+  return new URLSearchParams(location.search).get(name);
+}
+
+function icon(name, className = 'icon') {
+  const glyph = ICONS[name] || ICONS.package;
+  return `<svg class="${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${glyph}</svg>`;
+}
+
+function renderIcons(root = document) {
+  qsa('[data-icon]', root).forEach((node) => {
+    const iconName = node.dataset.icon;
+    const className = ['icon'];
+    if (node.classList.contains('icon-lg')) className.push('icon-lg');
+    if (node.classList.contains('icon-xl')) className.push('icon-xl');
+    node.outerHTML = icon(iconName, className.join(' '));
+  });
+}
+
+function toMinor(value) {
+  const numeric = Number(value || 0);
+  return numeric >= 100 ? Math.round(numeric) : Math.round(numeric * 100);
+}
+
+function formatMoney(value, currency = 'ron') {
+  const minor = toMinor(value);
+  return `${(minor / 100).toFixed(2).replace('.', ',')} ${String(currency || 'ron').toUpperCase()}`;
+}
+
+function homeAnchor(fragment) {
+  return CURRENT_PAGE === 'home' ? fragment : `index.html${fragment}`;
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+}
+
+async function parseResponse(response) {
+  const text = await response.text();
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch (_) {
+    return text;
+  }
+}
+
+async function request(path, { method = 'GET', data = null, headers = {}, raw = false } = {}) {
+  const options = {
     method,
-    headers,
-    body: data ? JSON.stringify(data) : null,
+    headers: { ...headers },
     credentials: 'include',
     cache: 'no-store'
-  });
-  if (res.status === 401) throw new Error('NEAUTENTIFICAT');
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json().catch(() => ({}));
-}
-
-// === CART API ===
-async function cartGet() {
-  const data = await api('/cart', { method: 'GET' });
-  // backend returnează lista direct; normalizăm la array
-  return Array.isArray(data) ? data : (data.items || []);
-}
-async function cartAdd(productId, quantity) { return api('/cart', { method: 'POST', data: { product_id: productId, quantity } }); }
-async function cartUpdate(itemId, quantity) { return api(`/cart/${itemId}`, { method: 'PUT', data: { quantity } }); }
-async function cartRemove(itemId) { return api(`/cart/${itemId}`, { method: 'DELETE' }); }
-
-// === COD ORDER HELPERS (globale) ===
-async function createCodOrder(payload) {
-  return api('/orders/checkout-cod', { method: 'POST', data: payload });
-}
-async function clearServerCart() {
-  try { await api('/cart', { method: 'DELETE' }); } catch (_) { }
-}
-function updateCodTotals(items) {
-  const productsMinor = items.reduce((sum, it) => {
-    const prod = it.product || {};
-    const unit = prod.price ?? it.price ?? 0;
-    const qty = it.quantity ?? it.qty ?? 1;
-    return sum + toMinor(unit) * qty;
-  }, 0);
-  const totalMinor = productsMinor + SHIPPING_MINOR;
-  const sp = document.querySelector('#sum-products');
-  const ss = document.querySelector('#sum-shipping');
-  const st = document.querySelector('#sum-total');
-  if (sp) sp.textContent = fromMinorText(productsMinor);
-  if (ss) ss.textContent = fromMinorText(SHIPPING_MINOR);
-  if (st) st.textContent = fromMinorText(totalMinor);
-}
-
-// === CART UI ===
-function setCartCounterFromItems(items = []) {
-  const n = items.reduce((s, it) => s + (it.quantity || it.qty || 0), 0);
-  const el = document.querySelector('#cart-count');
-  if (el) el.textContent = String(n);
-}
-
-// === HOME: categorie card-uri simple ===
-function renderCategories() {
-  const host = qs('#category-list'); if (!host) return;
-
-  const categories = [
-    { name: 'Car Tuning', desc: 'Accesorii & piese personalizate. Filtrează după marcă.', slug: 'car_tuning' },
-    { name: 'Suporti număr', desc: 'Suporturi magnetice pentru numere de înmatriculare.', slug: 'suporti_numar' }
-  ];
-
-  host.innerHTML = `
-    <style>
-      .category-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-      .cat-card{border:1px solid #eee;border-radius:14px;padding:16px;background:#fff}
-      .cat-card h3{margin:0 0 8px}
-      .cat-card p{margin:0 0 12px;color:#555}
-      .cat-card a{display:inline-block;padding:10px 12px;border-radius:10px;border:1px solid #ccc;text-decoration:none}
-    </style>
-    <div class="category-grid">
-      ${categories.map(c => `
-        <div class="cat-card">
-          <h3>${c.name}</h3>
-          <p>${c.desc}</p>
-          <a href="category.html?slug=${c.slug}">Vezi produsele</a>
-        </div>
-      `).join('')}
-    </div>
-  `;
-}
-
-// === GRID produse listă ===
-function renderProductsGrid(host, list) {
-  host.innerHTML = `
-    <style>
-      .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
-      .card{border:1px solid #eee;border-radius:12px;padding:12px;background:#fff}
-      .card img{width:100%;height:160px;object-fit:cover;border-radius:10px;background:#f4f4f4;margin-bottom:8px}
-      .card h4{margin:0 0 6px}
-      .card p{margin:0 0 8px;color:#555;font-size:14px;min-height:36px}
-      .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
-      .btn{padding:8px 10px;border:1px solid #ccc;border-radius:8px;background:#fff;text-decoration:none}
-    </style>
-    <div class="product-grid">
-      ${list.map(p => `
-        <div class="card">
-          <img src="${escapeHtml(imgOr(p.image_url))}" alt="${escapeHtml(p.name)}">
-          <h4>${escapeHtml(p.name)}</h4>
-          <p>${escapeHtml(p.description || '')}</p>
-          <div class="row">
-            <strong>${fmtPrice(p.price, p.currency)}</strong>
-            <a class="btn" href="product.html?id=${p.id}">Detalii</a>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
-}
-
-// === CATEGORY page ===
-async function setupCategoryPage() {
-  const host = qs('#products-list'); if (!host) return;
-  const slug = param('slug');
-  const titleEl = qs('#category-title');
-  const descEl = qs('#category-description');
-  const filterWrap = qs('#filter-container');
-  const meta = {
-    car_tuning: { title: 'Car Tuning', desc: 'Accesorii & piese personalizate. Filtrează după marcă.' },
-    suporti_numar: { title: 'Suporti număr', desc: 'Suporturi magnetice pentru numere de înmatriculare.' }
   };
-  const m = meta[slug] || { title: 'Categorie', desc: '' };
-  titleEl.textContent = m.title;
-  descEl.textContent = m.desc;
 
-  let products = await getJSON(`/products?category=${encodeURIComponent(slug)}`);
-
-  if (slug === 'car_tuning') {
-    const currentTag = param('tag') || '';
-    const allTags = Array.from(new Set(products.flatMap(p => (p.tags || [])))).sort();
-    filterWrap.innerHTML = '';
-    const label = document.createElement('label'); label.textContent = 'Marcă: '; label.style.marginRight = '8px';
-    const select = document.createElement('select');
-    // MED-03: escapeHtml on tag values (admin-set, but defence in depth)
-    select.innerHTML = `<option value="">(toate)</option>` + allTags.map(t => `<option ${t === currentTag ? 'selected' : ''} value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
-    select.onchange = async () => {
-      const tag = select.value || '';
-      const url = `/products?category=${encodeURIComponent(slug)}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`;
-      const list = await getJSON(url);
-      renderProductsGrid(host, list);
-      history.replaceState({}, '', `category.html?slug=${slug}${tag ? `&tag=${tag}` : ''}`);
-    };
-    filterWrap.append(label, select);
-    if (currentTag) products = await getJSON(`/products?category=${encodeURIComponent(slug)}&tag=${encodeURIComponent(currentTag)}`);
-  } else {
-    filterWrap.innerHTML = '';
-  }
-  renderProductsGrid(host, products);
-}
-
-// === PRODUCT page cu carusel & zoom & buton coș ===
-async function setupProductPage() {
-  const wrap = qs('#product-detail'); if (!wrap) return;
-  const id = parseInt(param('id') || '0', 10); if (!id) { wrap.textContent = 'Produs inexistent.'; return; }
-  let p; try { p = await getJSON('/products/' + id); } catch { wrap.textContent = 'Produs inexistent.'; return; }
-  const imgs = (Array.isArray(p.images) && p.images.length ? p.images : [p.image_url]).filter(Boolean);
-
-  wrap.innerHTML = `
-    <div class="pg">
-      <section class="pg-media">
-        <div class="carousel" id="car">
-          <button class="nav prev" id="carPrev" aria-label="Înapoi">‹</button>
-          <div class="track" id="carTrack"></div>
-          <button class="nav next" id="carNext" aria-label="Înainte">›</button>
-          <div class="dots" id="carDots"></div>
-        </div>
-      </section>
-      <section class="pg-info">
-        <h2>${escapeHtml(p.name || 'Produs')}</h2>
-        <div class="pg-price">${fmtPrice(p.price, p.currency)}</div>
-        <div class="pg-desc">${escapeHtml(p.description || '')}</div>
-        <div class="pg-actions">
-          <input id="qty" type="number" min="1" value="1">
-          <button id="addToCartBtn" class="btn">Adaugă în coș</button>
-        </div>
-      </section>
-    </div>
-    <div class="lightbox" id="lb" hidden>
-      <button class="close" id="lbClose">✕</button>
-      <div class="lb-stage" id="lbStage">
-        <img class="lb-img" id="lbImg" alt="">
-      </div>
-    </div>
-  `;
-
-  // add-to-cart (server)
-  const qtyEl = document.querySelector('#qty');
-  const addBtn = document.querySelector('#addToCartBtn');
-  if (addBtn) {
-    addBtn.addEventListener('click', async () => {
-      const qty = Math.max(1, parseInt(qtyEl?.value || '1', 10));
-      try {
-        await cartAdd(p.id, qty);
-        const cart = await cartGet();
-        setCartCounterFromItems(cart.items || cart || []);
-        alert('Produs adăugat în coș');
-      } catch (e) {
-        if (String(e.message).includes('NEAUTENTIFICAT')) {
-          location.href = 'login.html';
-        } else {
-          alert('Nu am putut adăuga în coș');
-          console.error(e);
-        }
-      }
-    });
+  if (data instanceof FormData) {
+    options.body = data;
+  } else if (data != null) {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(data);
   }
 
-  // carusel + swipe
-  const track = qs('#carTrack'), dots = qs('#carDots'), prev = qs('#carPrev'), next = qs('#carNext');
-  // CRIT-04: escapeHtml prevents stored XSS via malicious image_url in product data
-  track.innerHTML = imgs.map(src => `<div class="slide"><img src="${escapeHtml(src)}" alt=""></div>`).join('');
-  dots.innerHTML = imgs.map((_, i) => `<button class="dot" data-i="${i}" ${i === 0 ? 'aria-current="true"' : ''}></button>`).join('');
-  let i = 0, n = imgs.length, w = () => track.clientWidth;
-  function go(k) { i = Math.max(0, Math.min(n - 1, k)); track.style.transform = `translateX(${-i * w()}px)`; prev.disabled = i === 0; next.disabled = i === n - 1;[...dots.children].forEach((d, di) => d.toggleAttribute('aria-current', di === i)); }
-  window.addEventListener('resize', () => go(i));
-  prev.onclick = () => go(i - 1);
-  next.onclick = () => go(i + 1);
-  dots.onclick = e => { const d = e.target.closest('.dot'); if (d) go(+d.dataset.i); };
-  go(0);
-  let sx = 0, dx = 0, dragging = false;
-  track.addEventListener('pointerdown', e => { dragging = true; sx = e.clientX; dx = 0; track.style.transition = 'none'; track.setPointerCapture(e.pointerId); });
-  track.addEventListener('pointermove', e => { if (!dragging) return; dx = e.clientX - sx; track.style.transform = `translateX(${-(i * w()) + dx}px)`; });
-  function endDrag() { if (!dragging) return; dragging = false; track.style.transition = ''; if (Math.abs(dx) > w() * 0.15) { go(i + (dx < 0 ? 1 : -1)); } else { go(i); } }
-  track.addEventListener('pointerup', endDrag); track.addEventListener('pointercancel', endDrag); track.addEventListener('pointerleave', endDrag);
+  const response = await fetch(API_BASE + path, options);
+  if (raw) return response;
 
-  // lightbox + zoom
-  track.addEventListener('click', e => { const img = e.target.closest('img'); if (!img) return; const lb = qs('#lb'), lbImg = qs('#lbImg'); lb.hidden = false; lbImg.src = imgs[i]; zoomReset(); });
-  qs('#lbClose').onclick = () => qs('#lb').hidden = true;
-  let scale = 1, tx = 0, ty = 0, startX = 0, startY = 0, panning = false;
-  const lbStage = qs('#lbStage'), lbImg = qs('#lbImg');
-  function apply() { lbImg.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`; lbImg.style.top = '50%'; lbImg.style.left = '50%'; }
-  function zoomReset() { scale = 1; tx = 0; ty = 0; apply(); }
-  lbStage.addEventListener('wheel', e => {
-    e.preventDefault();
-    const delta = -Math.sign(e.deltaY) * 0.1;
-    const ns = Math.min(5, Math.max(1, scale + delta));
-    const rect = lbStage.getBoundingClientRect();
-    const cx = e.clientX - rect.left - rect.width / 2 - tx;
-    const cy = e.clientY - rect.top - rect.height / 2 - ty;
-    tx -= cx * (ns / scale - 1); ty -= cy * (ns / scale - 1);
-    scale = ns; apply();
-  }, { passive: false });
-  lbStage.addEventListener('dblclick', () => { scale = scale > 1 ? 1 : 2; tx = ty = 0; apply(); });
-  lbStage.addEventListener('pointerdown', e => { panning = true; startX = e.clientX - tx; startY = e.clientY - ty; lbStage.setPointerCapture(e.pointerId); });
-  lbStage.addEventListener('pointermove', e => { if (!panning) return; tx = e.clientX - startX; ty = e.clientY - startY; apply(); });
-  function endPan() { panning = false; }
-  lbStage.addEventListener('pointerup', endPan); lbStage.addEventListener('pointercancel', endPan); lbStage.addEventListener('pointerleave', endPan);
-  document.addEventListener('keydown', e => { if (qs('#lb').hidden) { if (e.key === 'ArrowLeft') go(i - 1); if (e.key === 'ArrowRight') go(i + 1); return; } if (e.key === 'Escape') qs('#lb').hidden = true; });
-}
-
-// === CART PAGE (server) — complet, cu checkout ramburs ===
-async function renderCartPageServer() {
-  const host = document.querySelector('#cart-items');
-  if (!host) return; // nu suntem pe cart.html
-  // Folosim funcțiile globale: createCodOrder, clearServerCart, updateCodTotals, SHIPPING_MINOR
-
-  try {
-    const items = await cartGet(); // cartGet normalizează la array
-
-    // counter din header
-    setCartCounterFromItems(items);
-
-    // coș gol
-    if (!items.length) {
-      host.innerHTML = '<p>Coșul tău este gol.</p>';
-      const t = document.querySelector('#cart-total');
-      if (t) t.textContent = '0,00 RON';
-
-      // dezactivează butonul și ascunde formularul
-      const btn = document.querySelector('#checkout-btn');
-      if (btn) btn.disabled = true;
-      const panel = document.querySelector('#cod-panel');
-      if (panel) panel.style.display = 'none';
-      return;
-    }
-
-    // rânduri coș
-    host.innerHTML = items.map(it => {
-      const prod = it.product || {};
-      const name = prod.name || it.name || 'Produs';
-      const img = prod.image_url || it.image || '';
-      const unit = prod.price ?? it.price ?? 0;               // bani sau RON
-      const qty = it.quantity ?? it.qty ?? 1;
-      const minor = toMinor(unit);
-      const subMin = minor * qty;
-
-      return `
-        <div class="cart-item" data-id="${it.id}">
-          <img src="${escapeHtml(img)}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px">
-          <div class="cart-item-name">${escapeHtml(name)}</div>
-
-          <div class="cart-item-controls">
-            <button class="minus">−</button>
-            <span class="item-qty">${qty}</span>
-            <button class="plus">+</button>
-          </div>
-
-          <div class="cart-item-subtotal">${fromMinorText(subMin)}</div>
-          <button class="cart-item-remove">Șterge</button>
-        </div>
-      `;
-    }).join('');
-
-    // calculează totalul din UI (din subtotale)
-    function recalcUI() {
-      const rows = [...host.querySelectorAll('.cart-item')];
-      let totalMinor = 0;
-      for (const r of rows) {
-        const txt = r.querySelector('.cart-item-subtotal').textContent
-          .replace(/[^\d,]/g, '').replace(',', '.');
-        const val = Math.round((parseFloat(txt) || 0) * 100);
-        totalMinor += val;
-      }
-      const totEl = document.querySelector('#cart-total');
-      if (totEl) totEl.textContent = fromMinorText(totalMinor);
-      return totalMinor;
-    }
-    recalcUI();
-
-    // +/- / șterge
-    host.onclick = async (e) => {
-      const row = e.target.closest('.cart-item');
-      if (!row) return;
-      const itemId = row.dataset.id;
-
-      if (e.target.classList.contains('cart-item-remove')) {
-        await cartRemove(itemId);
-        await renderCartPageServer();
-        return;
-      }
-
-      if (e.target.classList.contains('plus') || e.target.classList.contains('minus')) {
-        const qtyEl = row.querySelector('.item-qty');
-        let qty = parseInt(qtyEl.textContent, 10);
-        qty += e.target.classList.contains('plus') ? 1 : -1;
-        qty = Math.max(1, qty);
-        await cartUpdate(itemId, qty);
-
-        const cart2 = await cartGet();
-        setCartCounterFromItems(cart2);
-        await renderCartPageServer();
-      }
-    };
-
-    // butonul "Continuă la plată" → deschide formularul de ramburs
-    const checkoutBtn = document.querySelector('#checkout-btn');
-    if (checkoutBtn) {
-      checkoutBtn.disabled = items.length === 0;
-      checkoutBtn.textContent = 'Continuă la plată';
-      checkoutBtn.onclick = () => {
-        const panel = document.querySelector('#cod-panel');
-        if (panel) {
-          panel.style.display = 'block';
-          updateCodTotals(items);
-          panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      };
-    }
-
-    // submit formular → creează comanda COD
-    const codForm = document.querySelector('#cod-form');
-    if (codForm) {
-      codForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const fd = new FormData(codForm);
-        const full_name = (fd.get('full_name') || '').trim();
-        const phone = (fd.get('phone') || '').trim();
-        const address = (fd.get('address') || '').trim();
-        if (!full_name || !phone || !address) { alert('Completează toate câmpurile.'); return; }
-
-        const orderPayload = {
-          full_name: full_name,
-          phone: phone,
-          address: address,
-          shipping_fee_minor: SHIPPING_MINOR
-        };
-
-        // blochează butonul din formular
-        const submitBtn = codForm.querySelector('button[type="submit"]');
-        if (submitBtn) submitBtn.disabled = true;
-
-        try {
-          const order = await createCodOrder(orderPayload);
-          const orderId = order?.id ?? order?.order_id ?? null;
-
-          await clearServerCart();
-
-          if (orderId) {
-            location.href = 'success.html?id=' + encodeURIComponent(orderId);
-          } else {
-            alert('Comanda a fost înregistrată. Mulțumim!');
-            location.href = 'account.html';
-          }
-        } catch (err) {
-          console.error('createCodOrder error:', err);
-          alert('Nu am putut plasa comanda ramburs.\n' + (err.message || ''));
-        } finally {
-          if (submitBtn) submitBtn.disabled = false;
-        }
-      };
-    }
-  } catch (e) {
-    if (e.status === 401 || String(e.message).includes('NEAUTENTIFICAT')) {
-      location.href = 'login.html';
-      return;
-    }
-    console.error(e);
-    host.innerHTML = '<p>Eroare la încărcarea coșului.</p>';
-    const btn = document.querySelector('#checkout-btn');
-    if (btn) btn.disabled = true;
-    const panel = document.querySelector('#cod-panel');
-    if (panel) panel.style.display = 'none';
+  const payload = await parseResponse(response);
+  if (!response.ok) {
+    const detail = payload && typeof payload === 'object'
+      ? payload.detail || payload.message || payload.error
+      : payload;
+    const error = new Error(detail || `HTTP ${response.status}`);
+    error.status = response.status;
+    throw error;
   }
+
+  return payload;
 }
-
-
-
-// === AUTH v5 (JSON cu fallback la form) ===
-
-async function loginJSON(email, password) {
-  return fetch(API_BASE + '/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-    credentials: 'include'
-  });
-}
-async function loginForm(email, password) {
-  const form = new URLSearchParams();
-  form.set('username', email);
-  form.set('password', password);
-  return fetch(API_BASE + '/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: form.toString(),
-    credentials: 'include'
-  });
-}
-async function registerJSON(email, password, name = '') {
-  return fetch(API_BASE + '/auth/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, name }),
-    credentials: 'include'
-  });
-}
-async function registerForm(email, password, name = '') {
-  const form = new URLSearchParams();
-  form.set('email', email);
-  form.set('password', password);
-  form.set('name', name);
-  return fetch(API_BASE + '/auth/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: form.toString(),
-    credentials: 'include'
-  });
-}
-
-function hookLoginForm() {
-  const form = document.querySelector('#login-form');
-  if (!form) return;
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const fd = new FormData(form);
-    const email = (fd.get('email') || '').trim();
-    const password = fd.get('password') || '';  // MED-E: do NOT trim password — spaces are valid
-    if (!email || !password) { alert('Completează email și parolă.'); return; }
-
-    try {
-      let res = await loginJSON(email, password);
-      if (!res.ok && (res.status === 415 || res.status === 422)) res = await loginForm(email, password);
-      if (!res.ok) throw new Error((await res.text()) || ('HTTP ' + res.status));
-      // SEC-01: tokenul e setat de backend ca cookie HttpOnly — nu mai salvam in localStorage
-      location.href = 'index.html';
-    } catch (err) {
-      alert('Autentificare eșuată.\n' + err.message);
-      console.error(err);
-    }
-  });
-}
-
-function hookRegisterForm() {
-  const form = document.querySelector('#register-form');
-  if (!form) return;
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.querySelector('#register-email')?.value.trim() || '';
-    const pass1 = document.querySelector('#register-password')?.value || '';
-    const pass2 = document.querySelector('#register-password-confirm')?.value || '';
-    const name = '';
-    if (!email || !pass1) { alert('Completează email și parolă.'); return; }
-    if (pass1 !== pass2) { alert('Parolele nu coincid.'); return; }
-
-    try {
-      let res = await registerJSON(email, pass1, name);
-      if (!res.ok && (res.status === 415 || res.status === 422)) res = await registerForm(email, pass1, name);
-      if (!res.ok) throw new Error((await res.text()) || ('HTTP ' + res.status));
-      alert('Cont creat. Te poți autentifica.');
-      location.href = 'login.html';
-    } catch (err) {
-      alert('Înregistrare eșuată.\n' + err.message);
-      console.error(err);
-    }
-  });
-}
-
-// === INIT ===
-async function initHeaderCartCount() {
-  try {
-    const cart = await cartGet();
-    setCartCounterFromItems(cart.items || cart || []);
-  } catch { }
-}
-
-// ====== AUTH UI (me + header) ======
-function escapeHtml(s = '') { return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
 async function fetchMe() {
   try {
-    // SEC-01: cookie HttpOnly trimis automat de browser (credentials: 'include')
-    // BUG-22: fara fallback pe /auth/user care nu exista in backend
-    const r = await fetch(API_BASE + '/auth/me', { credentials: 'include', cache: 'no-store' });
-    if (r.ok) return await r.json();
-  } catch (_) { }
-  return null;
-}
-
-function renderAuthHeader(user) {
-  const box = document.querySelector('#user-nav');
-  if (!box) return;
-  if (user) {
-    const label = escapeHtml(user.email || user.name || 'Cont');
-    box.innerHTML = `<a href="account.html" id="user-email">${label}</a>`;
-  } else {
-    box.innerHTML = `<a href="login.html">Login</a>`;
+    return await request('/auth/me');
+  } catch (_) {
+    return null;
   }
 }
 
-async function changePassword(current_password, new_password) {
-  // SEC-01: cookie HttpOnly trimis automat de browser (credentials: 'include')
-  const headers = { 'Content-Type': 'application/json' };
+async function fetchProducts(path = '/products') {
+  const payload = await request(path);
+  return Array.isArray(payload) ? payload : (payload.items || payload.data || []);
+}
 
-  // încercăm POST /auth/change-password
-  let res = await fetch(API_BASE + '/auth/change-password', {
-    method: 'POST', headers, credentials: 'include',
-    body: JSON.stringify({ current_password, new_password })
-  });
-  // fallback: PUT /auth/password
-  if (!res.ok) {
-    res = await fetch(API_BASE + '/auth/password', {
-      method: 'PUT', headers, credentials: 'include',
-      body: JSON.stringify({ old_password: current_password, new_password })
-    });
-  }
-  if (!res.ok) throw new Error(await res.text() || ('HTTP ' + res.status));
-  return true;
+async function fetchProduct(id) {
+  return request(`/products/${id}`);
+}
+
+async function cartGet() {
+  const payload = await request('/cart');
+  return Array.isArray(payload) ? payload : (payload.items || []);
+}
+
+async function cartAdd(productId, quantity) {
+  return request('/cart', { method: 'POST', data: { product_id: productId, quantity } });
+}
+
+async function cartUpdate(itemId, quantity) {
+  return request(`/cart/${itemId}`, { method: 'PUT', data: { quantity } });
+}
+
+async function cartRemove(itemId) {
+  return request(`/cart/${itemId}`, { method: 'DELETE' });
+}
+
+async function clearServerCart() {
+  return request('/cart', { method: 'DELETE' });
+}
+
+async function createCodOrder(payload) {
+  return request('/orders/checkout-cod', { method: 'POST', data: payload });
 }
 
 async function fetchOrders() {
-  // SEC-01: cookie HttpOnly trimis automat de browser (credentials: 'include')
-  // GET /orders sau /orders/me
-  let r = await fetch(API_BASE + '/orders', { credentials: 'include', cache: 'no-store' });
-  if (!r.ok) {
-    r = await fetch(API_BASE + '/orders/me', { credentials: 'include', cache: 'no-store' });
+  const payload = await request('/orders');
+  return Array.isArray(payload) ? payload : (payload.orders || []);
+}
+
+async function changePassword(currentPassword, newPassword) {
+  return request('/auth/change-password', {
+    method: 'POST',
+    data: { current_password: currentPassword, new_password: newPassword }
+  });
+}
+
+function showToast(message, tone = 'success') {
+  let stack = qs('#toast-stack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.id = 'toast-stack';
+    stack.className = 'toast-stack';
+    document.body.appendChild(stack);
   }
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const data = await r.json();
-  return Array.isArray(data) ? data : (data.orders || []);
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${tone}`;
+  toast.textContent = message;
+  stack.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('is-leaving');
+    setTimeout(() => toast.remove(), 180);
+  }, 2400);
 }
 
-function statusBadge(s = '') {
-  const t = String(s || '').toLowerCase();
-  const map = {
-    created: 'Înregistrată',      // LOW-B: was missing
-    pending: 'În așteptare',
-    processing: 'În procesare',
-    in_preparation: 'În preparare',
-    paid: 'Plătită',
-    shipped: 'Expediată',
-    delivered: 'Livrată',
-    cancelled: 'Anulată',
-    canceled: 'Anulată',          // LOW-B: backend uses both spellings
-  };
-  return map[t] || s || '—';
-}
-
-function renderOrdersList(list) {
-  const host = document.querySelector('#orders-host');
-  if (!host) return;
-  if (!list.length) {
-    host.innerHTML = '<p>Nu ai comenzi încă.</p>';
+function setStatusMessage(node, message, tone) {
+  if (!node) return;
+  node.textContent = message || '';
+  node.classList.remove('hidden', 'success', 'error');
+  if (!message) {
+    node.classList.add('hidden');
     return;
   }
-  host.innerHTML = list.map(o => {
-    const id = o.id ?? o.order_id ?? '—';
-    const created = (o.created_at || o.created || o.date || '').toString().replace('T', ' ').replace('Z', '');
-    const totalMinor = (o.total_amount ?? o.total_minor ?? o.total ?? 0);  // HIGH-C: API returns total_amount
-    const totalText = minorToText(totalMinor, o.currency || 'RON');
-    const statusText = statusBadge(o.status);
-    const lines = (o.items || []).map(it => {
-      const name = it.name || it.product_name || (it.product?.name) || 'Produs';
-      const qty = it.quantity ?? it.qty ?? 1;
-      return `<li>${escapeHtml(name)} × ${qty}</li>`;
-    }).join('');
-    return `
-      <div class="order-card">
-        <h3>Comanda #${escapeHtml(String(id))}</h3>
-        <p><strong>Status:</strong> ${escapeHtml(statusText)}</p>
-        <p><strong>Total:</strong> ${escapeHtml(totalText)}</p>
-        ${created ? `<p><strong>Data:</strong> ${escapeHtml(created)}</p>` : ''}
-        ${lines ? `<ul>${lines}</ul>` : ''}
-      </div>
-    `;
-  }).join('<hr>');
+  node.classList.add(tone === 'error' ? 'error' : 'success');
 }
 
-async function renderAccountPage() {
-  const onAccount = !!document.querySelector('#change-pass-form');
-  if (!onAccount) return;
+function clearFieldErrors(form) {
+  qsa('.field', form).forEach((field) => {
+    field.classList.remove('has-error');
+    const message = qs('.field-error', field);
+    if (message) {
+      message.textContent = '';
+      message.hidden = true;
+    }
+  });
+}
 
-  // header & email
-  const me = await fetchMe();
-  renderAuthHeader(me);
-  const emailEl = document.querySelector('#account-email');
-  if (emailEl && me?.email) emailEl.textContent = me.email;
+function setFieldError(field, message) {
+  if (!field) return;
+  field.classList.toggle('has-error', Boolean(message));
+  const messageNode = qs('.field-error', field);
+  if (!messageNode) return;
+  messageNode.textContent = message || '';
+  messageNode.hidden = !message;
+}
 
-  // logout
-  document.querySelector('#logout-link')?.addEventListener('click', async (e) => {
-    e.preventDefault();
-    // SEC-01: /auth/logout sterge cookie-ul HttpOnly de pe server
-    try { await fetch(API_BASE + '/auth/logout', { method: 'POST', credentials: 'include' }); } catch (_) { }
-    location.href = 'index.html';
+function skeletonCards(count = 4) {
+  return Array.from({ length: count }, () => `
+    <div class="skeleton-card">
+      <div class="skeleton skeleton-media"></div>
+      <div class="skeleton skeleton-line"></div>
+      <div class="skeleton skeleton-line short"></div>
+      <div class="skeleton skeleton-line"></div>
+    </div>
+  `).join('');
+}
+
+function productTags(product) {
+  const raw = product.tags ?? product.tag ?? [];
+  if (Array.isArray(raw)) return raw.map((tag) => String(tag).toLowerCase());
+  return String(raw).toLowerCase().split(/[,;|]\s*/).filter(Boolean);
+}
+
+function productCategoryKey(product) {
+  return String(product.category || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_');
+}
+
+function productOldPrice(product) {
+  const candidates = [product.old_price, product.compare_at_price, product.original_price];
+  const match = candidates.find((value) => value != null && toMinor(value) > toMinor(product.price));
+  return match == null ? 0 : match;
+}
+
+function isPopularProduct(product) {
+  return productTags(product).some((tag) => ['popular', 'featured', 'bestseller', 'best-seller'].includes(tag));
+}
+
+function isCustomProduct(product) {
+  const tags = productTags(product);
+  const copy = `${product.name || ''} ${product.description || ''}`.toLowerCase();
+  return tags.some((tag) => ['custom', 'personalizat', 'personalizate', 'made_to_order'].includes(tag))
+    || copy.includes('personalizat')
+    || copy.includes('custom');
+}
+
+function isOfferProduct(product) {
+  return productTags(product).some((tag) => ['oferta', 'oferte', 'promo', 'sale', 'discount'].includes(tag))
+    || toMinor(productOldPrice(product)) > toMinor(product.price);
+}
+
+function productFilterMatch(product, filterKey) {
+  const category = productCategoryKey(product);
+
+  if (filterKey === 'all') return true;
+  if (filterKey === 'car_tuning' || filterKey === 'suporti_numar') return category === filterKey;
+  if (filterKey === 'personalizate') return isCustomProduct(product);
+  if (filterKey === 'oferte') return isOfferProduct(product);
+
+  return true;
+}
+
+function productSortComparator(sortKey) {
+  if (sortKey === 'price-asc') return (a, b) => toMinor(a.price) - toMinor(b.price);
+  if (sortKey === 'price-desc') return (a, b) => toMinor(b.price) - toMinor(a.price);
+  if (sortKey === 'newest') return (a, b) => Number(b.id || 0) - Number(a.id || 0);
+  if (sortKey === 'popular') {
+    return (a, b) => {
+      const aPopular = isPopularProduct(a) ? 1 : 0;
+      const bPopular = isPopularProduct(b) ? 1 : 0;
+      if (aPopular !== bPopular) return bPopular - aPopular;
+      return Number(b.id || 0) - Number(a.id || 0);
+    };
+  }
+
+  return (a, b) => {
+    const aFeatured = (isPopularProduct(a) ? 2 : 0) + (isOfferProduct(a) ? 1 : 0);
+    const bFeatured = (isPopularProduct(b) ? 2 : 0) + (isOfferProduct(b) ? 1 : 0);
+    if (aFeatured !== bFeatured) return bFeatured - aFeatured;
+    return Number(b.id || 0) - Number(a.id || 0);
+  };
+}
+
+function pluralizeProducts(count) {
+  return `${count} ${count === 1 ? 'produs' : 'produse'}`;
+}
+
+function statusLabel(status = '') {
+  const normalized = String(status || '').toLowerCase();
+  return {
+    created: 'Înregistrată',
+    pending: 'În așteptare',
+    processing: 'În procesare',
+    in_preparation: 'În procesare',
+    paid: 'Plătită',
+    shipped: 'Expediată',
+    delivered: 'Finalizată',
+    cancelled: 'Anulată',
+    canceled: 'Anulată'
+  }[normalized] || normalized || 'Necunoscut';
+}
+
+function statusClass(status = '') {
+  const normalized = String(status || '').toLowerCase();
+  if (['pending'].includes(normalized)) return 'status-pending';
+  if (['cancelled', 'canceled'].includes(normalized)) return 'status-cancelled';
+  if (['delivered', 'paid'].includes(normalized)) return 'status-completed';
+  return 'status-processing';
+}
+
+function renderFooter() {
+  const host = qs('#site-footer');
+  if (!host) return;
+
+  host.innerHTML = `
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div>
+            <div class="footer-brand-title">RXP CUSTOM3D</div>
+            <p style="margin-top: 16px;">Suporți magnetici 3D printați, fabricați în România.</p>
+            <div class="footer-socials">
+              <a href="404.html" aria-label="Facebook">${icon('facebook')}</a>
+              <a href="https://www.instagram.com/rxpcustom3d" target="_blank" rel="noreferrer" aria-label="Instagram">${icon('instagram')}</a>
+              <a href="404.html" aria-label="TikTok">${icon('tiktok')}</a>
+            </div>
+          </div>
+
+          <div>
+            <div class="footer-heading">Magazin</div>
+            <div class="footer-links">
+              <a href="categories.html">Toate produsele</a>
+              <a href="custom.html">Personalizare</a>
+              <a href="categories.html">Cataloage</a>
+              <a href="categories.html">Oferte</a>
+            </div>
+          </div>
+
+          <div>
+            <div class="footer-heading">Companie</div>
+            <div class="footer-links">
+              <a href="${homeAnchor('#despre')}">Despre noi</a>
+              <a href="${homeAnchor('#contact')}">Contact</a>
+              <a href="404.html">Blog</a>
+              <a href="404.html">Recenzii</a>
+            </div>
+          </div>
+
+          <div>
+            <div class="footer-heading">Informații</div>
+            <div class="footer-links">
+              <a href="404.html">Livrare</a>
+              <a href="404.html">Retururi</a>
+              <a href="404.html">Termeni și condiții</a>
+              <a href="404.html">Politica de confidențialitate</a>
+              <a href="https://anpc.ro/" target="_blank" rel="noreferrer">ANPC</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <span>© 2026 RXP CUSTOM3D. Toate drepturile rezervate.</span>
+          <div class="payment-icons" aria-label="Metode de plată">
+            <span class="payment-pill">VISA</span>
+            <span class="payment-pill">Mastercard</span>
+            <span class="payment-pill">Apple Pay</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  `;
+}
+
+function renderHeader(user) {
+  const host = qs('#site-header');
+  if (!host) return;
+
+  const navKey = CURRENT_PAGE === 'home'
+    ? 'home'
+    : CURRENT_PAGE === 'custom'
+      ? 'custom'
+      : CURRENT_PAGE === 'products'
+        ? 'products'
+        : '';
+
+  const navItems = [
+    { key: 'home', href: 'index.html', label: 'Acasă' },
+    { key: 'products', href: 'categories.html', label: 'Produse' },
+    { key: 'custom', href: 'custom.html', label: 'Personalizare' },
+    { key: 'about', href: homeAnchor('#despre'), label: 'Despre' },
+    { key: 'contact', href: homeAnchor('#contact'), label: 'Contact' }
+  ];
+
+  const mobileAccountLink = user
+    ? `<a class="mobile-nav-link" href="account.html">${icon('user')}Contul meu</a>
+       <button class="mobile-nav-link" type="button" id="mobile-logout-button">${icon('log-out')}Deconectare</button>`
+    : `<a class="mobile-nav-link" href="login.html">${icon('user')}Autentificare</a>`;
+
+  const userControl = user
+    ? `
+      <div class="user-menu">
+        <button type="button" class="btn user-trigger" id="user-menu-trigger" aria-expanded="false" aria-haspopup="true">
+          ${icon('user')}
+          ${icon('chevron-down')}
+        </button>
+        <div class="dropdown-menu" id="user-dropdown" hidden>
+          <span class="dropdown-email">${escapeHtml(user.email || '')}</span>
+          <a class="dropdown-link" href="account.html">${icon('user')}Contul meu</a>
+          <button type="button" class="dropdown-link" id="logout-link">${icon('log-out')}Deconectare</button>
+        </div>
+      </div>
+    `
+    : `<a class="btn user-trigger" href="login.html">${icon('user')}Autentificare</a>`;
+
+  host.innerHTML = `
+    <header class="site-header" id="app-header">
+      <div class="container header-shell">
+        <a class="brand-link" href="index.html" aria-label="RXP CUSTOM3D">
+          <div class="brand-lockup">
+            <span class="brand-title">RXP CUSTOM3D</span>
+            <span class="brand-subtitle">3D Print Shop</span>
+          </div>
+        </a>
+
+        <div class="header-nav main-nav">
+          <nav aria-label="Navigație principală">
+            <ul class="main-nav-list">
+              ${navItems.map((item) => `
+                <li><a class="main-nav-link ${item.key === navKey ? 'is-active' : ''}" href="${item.href}">${item.label}</a></li>
+              `).join('')}
+            </ul>
+          </nav>
+
+          <span class="header-divider" aria-hidden="true"></span>
+
+          <div class="header-actions desktop-header-actions">
+            <a class="btn cart-button" href="cart.html" aria-label="Coș">
+              ${icon('shopping-cart')}
+              <span class="cart-label">Coș</span>
+              <span class="cart-badge is-empty" data-cart-count>0</span>
+            </a>
+            ${userControl}
+          </div>
+        </div>
+
+        <div class="mobile-header-actions">
+          <a class="btn cart-button" href="cart.html" aria-label="Coș">
+            ${icon('shopping-cart')}
+            <span class="cart-label">Coș</span>
+            <span class="cart-badge is-empty" data-cart-count>0</span>
+          </a>
+          <button type="button" class="mobile-menu-button" id="mobile-menu-button" aria-expanded="false" aria-controls="mobile-drawer" aria-label="Deschide meniul">
+            ${icon('menu')}
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="mobile-backdrop" id="mobile-backdrop"></div>
+    <aside class="mobile-drawer" id="mobile-drawer" aria-hidden="true">
+      <div class="mobile-drawer-header">
+        <div class="brand-lockup">
+          <span class="brand-title">RXP CUSTOM3D</span>
+          <span class="brand-subtitle">3D Print Shop</span>
+        </div>
+        <button type="button" class="mobile-menu-button" id="mobile-menu-close" aria-label="Închide meniul">
+          ${icon('x')}
+        </button>
+      </div>
+
+      <nav aria-label="Navigație mobilă">
+        <div class="mobile-nav-list">
+          ${navItems.map((item) => `
+            <a class="mobile-nav-link ${item.key === navKey ? 'is-active' : ''}" href="${item.href}">${item.label}</a>
+          `).join('')}
+          <a class="mobile-nav-link" href="cart.html">${icon('shopping-cart')}Coș</a>
+          ${mobileAccountLink}
+        </div>
+      </nav>
+    </aside>
+  `;
+
+  const headerNode = qs('#app-header', host);
+  if (headerNode) {
+    const onScroll = () => headerNode.classList.toggle('is-scrolled', window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  bindHeaderEvents();
+}
+
+function bindHeaderEvents() {
+  const drawer = qs('#mobile-drawer');
+  const backdrop = qs('#mobile-backdrop');
+  const openButton = qs('#mobile-menu-button');
+  const closeButton = qs('#mobile-menu-close');
+  const dropdownTrigger = qs('#user-menu-trigger');
+  const dropdown = qs('#user-dropdown');
+
+  function openDrawer() {
+    if (!drawer || !backdrop || !openButton) return;
+    drawer.classList.add('is-open');
+    backdrop.classList.add('is-open');
+    drawer.setAttribute('aria-hidden', 'false');
+    openButton.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('menu-open');
+  }
+
+  function closeDrawer() {
+    if (!drawer || !backdrop || !openButton) return;
+    drawer.classList.remove('is-open');
+    backdrop.classList.remove('is-open');
+    drawer.setAttribute('aria-hidden', 'true');
+    openButton.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('menu-open');
+  }
+
+  function closeDropdown() {
+    if (!dropdown || !dropdownTrigger) return;
+    dropdown.hidden = true;
+    dropdownTrigger.setAttribute('aria-expanded', 'false');
+  }
+
+  openButton?.addEventListener('click', openDrawer);
+  closeButton?.addEventListener('click', closeDrawer);
+  backdrop?.addEventListener('click', closeDrawer);
+  qsa('.mobile-nav-link', drawer || document).forEach((link) => link.addEventListener('click', closeDrawer));
+
+  dropdownTrigger?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const next = dropdown.hidden;
+    dropdown.hidden = !next;
+    dropdownTrigger.setAttribute('aria-expanded', String(next));
   });
 
-  // schimbă parola
-  const passForm = document.querySelector('#change-pass-form');
-  passForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const fd = new FormData(passForm);
-    const cur = (fd.get('current_password') || '').trim();
-    const n1 = (fd.get('new_password') || '').trim();
-    const n2 = (fd.get('new_password2') || '').trim();
-    if (!cur || !n1) { alert('Completează toate câmpurile.'); return; }
-    if (n1 !== n2) { alert('Parolele nu coincid.'); return; }
-    try {
-      await changePassword(cur, n1);
-      alert('Parola a fost schimbată.');
-      passForm.reset();
-    } catch (err) {
-      alert('Nu am putut schimba parola.\n' + err.message);
-      console.error(err);
+  document.addEventListener('click', (event) => {
+    if (dropdown && dropdownTrigger && !dropdown.hidden && !dropdown.contains(event.target) && !dropdownTrigger.contains(event.target)) {
+      closeDropdown();
     }
   });
 
-  // comenzi
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeDrawer();
+      closeDropdown();
+    }
+  });
+
+  qs('#logout-link')?.addEventListener('click', performLogout);
+  qs('#mobile-logout-button')?.addEventListener('click', performLogout);
+}
+
+async function performLogout(event) {
+  event?.preventDefault();
   try {
-    const orders = await fetchOrders();
-    renderOrdersList(orders);
-  } catch (err) {
-    const host = document.querySelector('#orders-host');
-    if (host) host.innerHTML = '<p>Eroare la încărcarea comenzilor.</p>';
-    console.error(err);
+    await request('/auth/logout', { method: 'POST' });
+  } catch (_) {
+    // ignore
+  }
+  location.href = 'index.html';
+}
+
+function setCartCounter(items = []) {
+  const count = Array.isArray(items)
+    ? items.reduce((sum, item) => sum + Number(item.quantity || item.qty || 0), 0)
+    : Number(items || 0);
+
+  qsa('[data-cart-count]').forEach((node) => {
+    node.textContent = String(count);
+    node.classList.toggle('is-empty', count <= 0);
+  });
+}
+
+async function initHeaderState() {
+  try {
+    const items = await cartGet();
+    setCartCounter(items);
+  } catch (_) {
+    setCartCounter([]);
   }
 }
 
-// === HOME: Produse Populare (fără request cu ?tag=…) ===
-async function setupHomePopular() {
+function renderCookieBanner() {
+  if (localStorage.getItem('rxp-cookie-consent') === 'accepted') return;
+  if (qs('#cookie-banner')) return;
+
+  const banner = document.createElement('section');
+  banner.id = 'cookie-banner';
+  banner.className = 'cookie-banner';
+  banner.innerHTML = `
+    <div>
+      <strong>Folosim cookie-uri necesare</strong>
+      <p class="helper-text">Site-ul păstrează sesiunea de autentificare și preferințele minime pentru a funcționa corect.</p>
+    </div>
+    <div class="cookie-actions">
+      <button type="button" class="btn btn-primary" id="cookie-accept">Accept</button>
+      <button type="button" class="btn btn-ghost" id="cookie-close">Închide</button>
+    </div>
+  `;
+  document.body.appendChild(banner);
+
+  qs('#cookie-accept', banner)?.addEventListener('click', () => {
+    localStorage.setItem('rxp-cookie-consent', 'accepted');
+    banner.hidden = true;
+  });
+
+  qs('#cookie-close', banner)?.addEventListener('click', () => {
+    banner.hidden = true;
+  });
+}
+
+function renderProductGrid(host, products, emptyMessage = 'Nu există produse disponibile în acest moment.') {
+  if (!host) return;
+  if (!products.length) {
+    host.innerHTML = `<div class="empty-state"><div class="icon-badge">${icon('package', 'icon-xl')}</div><h3>Momentan nu există produse</h3><p>${escapeHtml(emptyMessage)}</p></div>`;
+    return;
+  }
+
+  host.innerHTML = products.map((product) => `
+    <article class="product-card">
+      <a class="product-media" href="product.html?id=${product.id}">
+        <img src="${escapeHtml(product.image_url || 'images/product-placeholder.png')}" alt="${escapeHtml(product.name || 'Produs RXP CUSTOM3D')}" loading="lazy">
+      </a>
+      <div class="product-content">
+        <div>
+          <h3><a href="product.html?id=${product.id}">${escapeHtml(product.name || 'Produs')}</a></h3>
+          <p class="product-description">${escapeHtml(product.description || 'Produs disponibil prin API.')}</p>
+        </div>
+        <div class="product-row">
+          <strong class="product-price">${formatMoney(product.price, product.currency)}</strong>
+          <button type="button" class="btn btn-primary js-add-to-cart" data-product-id="${product.id}">Adaugă în coș</button>
+        </div>
+      </div>
+    </article>
+  `).join('');
+}
+
+async function addProductToCart(productId, quantity = 1) {
+  try {
+    await cartAdd(productId, quantity);
+    const cart = await cartGet();
+    setCartCounter(cart);
+    showToast('Produsul a fost adăugat în coș.');
+  } catch (error) {
+    if (error.status === 401) {
+      location.href = `login.html?next=${encodeURIComponent(currentRelativeUrl())}`;
+      return;
+    }
+    showToast(error.message || 'Nu am putut adăuga produsul în coș.', 'error');
+  }
+}
+
+function bindGlobalProductActions() {
+  document.addEventListener('click', async (event) => {
+    const button = event.target.closest('.js-add-to-cart');
+    if (!button) return;
+    const productId = Number(button.dataset.productId || 0);
+    if (!productId) return;
+    button.disabled = true;
+    try {
+      await addProductToCart(productId, 1);
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
+async function renderHomePage() {
   const host = qs('#popular-list');
   if (!host) return;
 
+  host.innerHTML = skeletonCards(4);
   try {
-    // 1 request simplu
-    const all = await getJSON('/products');
-    const arr = Array.isArray(all) ? all : (all.items || all.data || []);
-
-    // filtrăm local după tag 'popular' (merge și listă și string)
-    const popular = arr.filter(p => {
-      const raw = p.tags ?? p.tag ?? [];
-      if (Array.isArray(raw)) return raw.some(t => String(t).toLowerCase() === 'popular');
-      return String(raw).toLowerCase().split(/[,;|]\s*/).includes('popular');
+    const allProducts = await fetchProducts();
+    const popular = allProducts.filter((product) => {
+      const rawTags = product.tags ?? product.tag ?? [];
+      if (Array.isArray(rawTags)) {
+        return rawTags.some((tag) => String(tag).toLowerCase() === 'popular');
+      }
+      return String(rawTags).toLowerCase().split(/[,;|]\s*/).includes('popular');
     });
 
-    if (!popular.length) {
-      host.innerHTML = '<p>Nu sunt produse populare momentan.</p>';
-      return;
-    }
-
-    // opțional: limitează la 4 pe homepage
-    renderProductsGrid(host, popular.slice(0, 4));
-  } catch (err) {
-    console.error('Popular load error:', err);
-    host.innerHTML = '<p>Nu am putut încărca produsele populare.</p>';
+    const visibleProducts = (popular.length ? popular : allProducts).slice(0, 4);
+    renderProductGrid(host, visibleProducts, 'Produsele populare vor apărea aici imediat ce sunt publicate.');
+  } catch (error) {
+    host.innerHTML = `<div class="empty-state"><div class="icon-badge">${icon('package', 'icon-xl')}</div><h3>Nu am putut încărca produsele</h3><p>${escapeHtml(error.message || 'Încearcă din nou peste câteva momente.')}</p></div>`;
   }
 }
 
-// === Checkout cu fallback pe "ramburs" (fără Stripe) ===
-async function startCheckout() {
-  // dacă backend-ul tău are Stripe configurat mai târziu, poți lăsa payload-ul ăsta:
-  const payload = {
-    success_url: location.origin + '/success.html',
-    cancel_url: location.origin + '/cart.html',
-    return_url: location.origin + '/success.html'
+function renderCatalogProductSkeletons(host) {
+  if (!host) return;
+  host.innerHTML = skeletonCards(8);
+}
+
+function renderCatalogCategoryCounts(products) {
+  const carCount = products.filter((product) => productCategoryKey(product) === 'car_tuning').length;
+  const plateCount = products.filter((product) => productCategoryKey(product) === 'suporti_numar').length;
+
+  const carNode = qs('#count-car-tuning');
+  const plateNode = qs('#count-plate-holders');
+  const carCard = qs('.catalog-category-card--car');
+  const plateCard = qs('.catalog-category-card--plates');
+
+  if (carNode) carNode.textContent = pluralizeProducts(carCount);
+  if (plateNode) plateNode.textContent = pluralizeProducts(plateCount);
+  if (carCard) carCard.setAttribute('aria-label', `Vezi categoria Car Tuning, ${carCount} de ${carCount === 1 ? 'produs' : 'produse'}`);
+  if (plateCard) plateCard.setAttribute('aria-label', `Vezi categoria Suporți număr, ${plateCount} de ${plateCount === 1 ? 'produs' : 'produse'}`);
+}
+
+function renderCatalogProducts(host, products, viewMode = 'grid') {
+  if (!host) return;
+
+  host.classList.toggle('is-list-view', viewMode === 'list');
+
+  if (!products.length) {
+    host.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <div class="icon-badge">${icon('package', 'icon-xl')}</div>
+        <h3>Nu am găsit produse pentru filtrul selectat</h3>
+        <p>Încearcă alt filtru sau revino la „Toate” pentru a vedea întregul catalog.</p>
+      </div>
+    `;
+    return;
+  }
+
+  host.innerHTML = products.map((product) => {
+    const badge = isPopularProduct(product)
+      ? 'Popular'
+      : isOfferProduct(product)
+        ? 'Ofertă'
+        : '';
+    const oldPrice = productOldPrice(product);
+
+    return `
+      <article class="catalog-product-card">
+        <a class="catalog-product-card__media" href="product.html?id=${product.id}" aria-label="Vezi produsul ${escapeHtml(product.name || 'Produs')}">
+          <img
+            src="${escapeHtml(product.image_url || 'images/product-placeholder.png')}"
+            alt="${escapeHtml(`Produs ${product.name || 'RXP CUSTOM3D'} din categoria ${product.category || 'catalog'}`)}"
+            loading="lazy"
+            width="800"
+            height="800"
+          >
+        </a>
+        <div class="catalog-product-card__body">
+          <div>
+            <h3 class="catalog-product-card__heading">
+              <a class="catalog-product-card__name" href="product.html?id=${product.id}">${escapeHtml(product.name || 'Produs')}</a>
+            </h3>
+            <p class="catalog-product-card__description">${escapeHtml(product.description || 'Produs disponibil în catalogul RXP CUSTOM3D.')}</p>
+          </div>
+          <div class="catalog-product-card__meta">
+            <div class="catalog-product-card__price-row">
+              <strong class="catalog-product-card__price">${formatMoney(product.price, product.currency)}</strong>
+              ${oldPrice ? `<span class="catalog-product-card__old-price">${formatMoney(oldPrice, product.currency)}</span>` : ''}
+            </div>
+            ${badge ? `<span class="catalog-product-card__badge">${escapeHtml(badge)}</span>` : ''}
+          </div>
+          <button type="button" class="btn btn-primary btn-full catalog-product-card__button js-add-to-cart" data-product-id="${product.id}">Adaugă în coș</button>
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
+async function renderCatalogLandingPage() {
+  const gridHost = qs('#catalog-products-grid');
+  if (!gridHost) return;
+
+  const filterButtons = qsa('.catalog-filter-chip');
+  const sortSelect = qs('#catalog-sort');
+  const loadMoreButton = qs('#catalog-load-more');
+  const metaNode = qs('#catalog-products-meta');
+  const viewButtons = qsa('.catalog-view-toggle__button');
+
+  const state = {
+    allProducts: [],
+    filteredProducts: [],
+    selectedFilter: 'all',
+    selectedSort: 'recommended',
+    selectedView: 'grid',
+    visibleCount: 8
   };
 
+  function updateMeta() {
+    if (!metaNode) return;
+    const shownCount = Math.min(state.visibleCount, state.filteredProducts.length);
+    const filterLabel = ({
+      all: 'Toate',
+      suporti_numar: 'Suporți număr',
+      car_tuning: 'Car Tuning',
+      personalizate: 'Personalizate',
+      oferte: 'Oferte'
+    })[state.selectedFilter] || 'Toate';
+    metaNode.textContent = `Afișezi ${shownCount} din ${state.filteredProducts.length} ${state.filteredProducts.length === 1 ? 'produs' : 'produse'} · Filtru: ${filterLabel}`;
+  }
+
+  function applyState() {
+    state.filteredProducts = state.allProducts
+      .filter((product) => productFilterMatch(product, state.selectedFilter))
+      .sort(productSortComparator(state.selectedSort));
+
+    renderCatalogProducts(gridHost, state.filteredProducts.slice(0, state.visibleCount), state.selectedView);
+    updateMeta();
+
+    if (loadMoreButton) {
+      const allVisible = state.filteredProducts.length <= state.visibleCount;
+      loadMoreButton.hidden = allVisible;
+      loadMoreButton.disabled = allVisible;
+    }
+  }
+
+  function activateFilter(nextFilter) {
+    state.selectedFilter = nextFilter;
+    state.visibleCount = 8;
+    filterButtons.forEach((button) => {
+      const isActive = button.dataset.filter === nextFilter;
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-pressed', String(isActive));
+    });
+    applyState();
+  }
+
+  function activateView(nextView) {
+    state.selectedView = nextView;
+    viewButtons.forEach((button) => {
+      const isActive = button.dataset.view === nextView;
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-pressed', String(isActive));
+    });
+    applyState();
+  }
+
+  renderCatalogProductSkeletons(gridHost);
+
   try {
-    // încercăm plăți online DOAR dacă endpointul e configurat;
-    // dacă nu e, cădem în catch și facem comanda COD
-    const data = await api('/payments/create-payment-intent', { method: 'POST', data: payload });
+    state.allProducts = await fetchProducts('/products');
+    renderCatalogCategoryCounts(state.allProducts);
+    applyState();
+  } catch (error) {
+    gridHost.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <div class="icon-badge">${icon('package', 'icon-xl')}</div>
+        <h3>Nu am putut încărca produsele</h3>
+        <p>${escapeHtml(error.message || 'Încearcă din nou peste câteva momente.')}</p>
+      </div>
+    `;
+    if (metaNode) metaNode.textContent = 'Catalogul nu este disponibil momentan.';
+    return;
+  }
 
-    const url = data.checkout_url || data.url || data.redirect_url || data.session_url;
-    if (url) { location.href = url; return; }
+  filterButtons.forEach((button) => {
+    button.addEventListener('click', () => activateFilter(button.dataset.filter || 'all'));
+  });
 
-    if (data.client_secret || data.payment_intent_client_secret) {
-      alert('Plata online este activă dar UI-ul de card nu e implementat. Trecem pe ramburs.');
-      // continuă pe ramburs:
-      const order = await createCodOrder();
-      finalizeOrder(order);
+  sortSelect?.addEventListener('change', () => {
+    state.selectedSort = sortSelect.value || 'recommended';
+    state.visibleCount = 8;
+    applyState();
+  });
+
+  viewButtons.forEach((button) => {
+    button.addEventListener('click', () => activateView(button.dataset.view || 'grid'));
+  });
+
+  loadMoreButton?.addEventListener('click', () => {
+    state.visibleCount += 4;
+    applyState();
+  });
+}
+
+async function renderCategoryPage() {
+  const host = qs('#products-list');
+  if (!host) return;
+
+  const slug = param('slug');
+  const titleNode = qs('#category-title');
+  const descriptionNode = qs('#category-description');
+  const filterNode = qs('#filter-container');
+
+  const meta = {
+    car_tuning: {
+      title: 'Car Tuning',
+      description: 'Accesorii și piese personalizate. Poți filtra rapid după marcă.'
+    },
+    suporti_numar: {
+      title: 'Suporți număr',
+      description: 'Suporturi magnetice pentru numere de înmatriculare.'
+    }
+  };
+
+  const currentMeta = meta[slug] || { title: 'Categorie', description: 'Alege produsul potrivit pentru configurarea ta.' };
+  if (titleNode) titleNode.textContent = currentMeta.title;
+  if (descriptionNode) descriptionNode.textContent = currentMeta.description;
+
+  host.innerHTML = skeletonCards(4);
+
+  try {
+    let products = await fetchProducts(`/products?category=${encodeURIComponent(slug || '')}`);
+
+    if (slug === 'car_tuning' && filterNode) {
+      const selectedTag = param('tag') || '';
+      const tags = Array.from(new Set(products.flatMap((product) => product.tags || []))).sort();
+      filterNode.innerHTML = tags.length ? `
+        <label for="brand-filter">Marcă</label>
+        <select id="brand-filter" class="select">
+          <option value="">Toate</option>
+          ${tags.map((tag) => `<option value="${escapeHtml(tag)}" ${tag === selectedTag ? 'selected' : ''}>${escapeHtml(tag)}</option>`).join('')}
+        </select>
+      ` : '';
+
+      const select = qs('#brand-filter', filterNode);
+      select?.addEventListener('change', async () => {
+        const nextTag = select.value;
+        host.innerHTML = skeletonCards(4);
+        const query = nextTag
+          ? `/products?category=${encodeURIComponent(slug)}&tag=${encodeURIComponent(nextTag)}`
+          : `/products?category=${encodeURIComponent(slug)}`;
+        const filteredProducts = await fetchProducts(query);
+        renderProductGrid(host, filteredProducts, 'Nu există produse pentru filtrul selectat.');
+        history.replaceState({}, '', `category.html?slug=${encodeURIComponent(slug)}${nextTag ? `&tag=${encodeURIComponent(nextTag)}` : ''}`);
+      });
+
+      if (selectedTag) {
+        products = await fetchProducts(`/products?category=${encodeURIComponent(slug)}&tag=${encodeURIComponent(selectedTag)}`);
+      }
+    } else if (filterNode) {
+      filterNode.innerHTML = '';
+    }
+
+    renderProductGrid(host, products, 'Nu există produse în această categorie.');
+  } catch (error) {
+    host.innerHTML = `<div class="empty-state"><div class="icon-badge">${icon('package', 'icon-xl')}</div><h3>Nu am putut încărca categoria</h3><p>${escapeHtml(error.message || 'Încearcă din nou mai târziu.')}</p></div>`;
+  }
+}
+
+function renderProductSkeleton() {
+  return `
+    <div class="product-detail-grid">
+      <div class="skeleton-card"><div class="skeleton skeleton-media" style="height: 420px;"></div></div>
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-line short"></div>
+        <div class="skeleton skeleton-line"></div>
+        <div class="skeleton skeleton-line"></div>
+        <div class="skeleton skeleton-line short"></div>
+      </div>
+    </div>
+  `;
+}
+
+async function renderProductPage() {
+  const host = qs('#product-detail');
+  if (!host) return;
+
+  const productId = Number(param('id') || 0);
+  if (!productId) {
+    location.href = '404.html';
+    return;
+  }
+
+  host.innerHTML = renderProductSkeleton();
+
+  try {
+    const product = await fetchProduct(productId);
+    const images = Array.isArray(product.images) && product.images.length ? product.images : [product.image_url || 'images/product-placeholder.png'];
+    const stock = Number(product.stock || 0);
+
+    host.innerHTML = `
+      <div class="product-detail-grid">
+        <section class="surface-card product-gallery-card">
+          <div class="product-gallery-main">
+            <img id="product-main-image" src="${escapeHtml(images[0])}" alt="${escapeHtml(product.name || 'Produs RXP CUSTOM3D')}">
+          </div>
+          <div class="product-gallery-thumbs">
+            ${images.map((image, index) => `
+              <button type="button" class="product-thumb ${index === 0 ? 'is-active' : ''}" data-product-image="${escapeHtml(image)}" aria-label="Imagine produs ${index + 1}">
+                <img src="${escapeHtml(image)}" alt="">
+              </button>
+            `).join('')}
+          </div>
+        </section>
+
+        <section class="surface-card product-info-card">
+          <span class="section-eyebrow">Produs</span>
+          <h1 class="page-title">${escapeHtml(product.name || 'Produs')}</h1>
+          <p class="text-body-lg">${escapeHtml(product.description || 'Produs disponibil pentru comandă.')}</p>
+
+          <div class="product-meta-grid">
+            <div>
+              <span class="helper-text">Preț</span>
+              <div class="product-price">${formatMoney(product.price, product.currency)}</div>
+            </div>
+            <div>
+              <span class="helper-text">Disponibilitate</span>
+              <div>${stock > 0 ? `${stock} în stoc` : 'Stoc indisponibil'}</div>
+            </div>
+          </div>
+
+          <div class="product-purchase-row">
+            <div class="field" style="margin: 0;">
+              <label class="field-label" for="product-qty">Cantitate</label>
+              <div class="qty-stepper">
+                <button type="button" data-qty-action="decrease" aria-label="Scade cantitatea">−</button>
+                <input id="product-qty" class="input" type="number" min="1" value="1">
+                <button type="button" data-qty-action="increase" aria-label="Crește cantitatea">+</button>
+              </div>
+            </div>
+
+            <button type="button" id="product-add-button" class="btn btn-primary" ${stock <= 0 ? 'disabled' : ''}>Adaugă în coș</button>
+          </div>
+        </section>
+      </div>
+    `;
+
+    const mainImage = qs('#product-main-image', host);
+    qsa('.product-thumb', host).forEach((thumb) => {
+      thumb.addEventListener('click', () => {
+        qsa('.product-thumb', host).forEach((button) => button.classList.remove('is-active'));
+        thumb.classList.add('is-active');
+        if (mainImage) mainImage.src = thumb.dataset.productImage || '';
+      });
+    });
+
+    const quantityInput = qs('#product-qty', host);
+    qsa('[data-qty-action]', host).forEach((button) => {
+      button.addEventListener('click', () => {
+        const current = Math.max(1, Number(quantityInput?.value || 1));
+        quantityInput.value = String(button.dataset.qtyAction === 'increase' ? current + 1 : Math.max(1, current - 1));
+      });
+    });
+
+    qs('#product-add-button', host)?.addEventListener('click', async () => {
+      const quantity = Math.max(1, Number(quantityInput?.value || 1));
+      await addProductToCart(product.id, quantity);
+    });
+  } catch (_) {
+    location.href = '404.html';
+  }
+}
+
+function cartSummaryTemplate(subtotalMinor) {
+  const totalMinor = subtotalMinor + SHIPPING_MINOR;
+  return `
+    <div class="summary-card">
+      <div>
+        <span class="section-eyebrow">Rezumat</span>
+        <h2>Comanda ta</h2>
+      </div>
+      <div class="summary-lines">
+        <div class="summary-line"><span>Subtotal</span><strong>${formatMoney(subtotalMinor)}</strong></div>
+        <div class="summary-line"><span>Estimare transport</span><strong>${formatMoney(SHIPPING_MINOR)}</strong></div>
+        <div class="summary-line total"><span>Total</span><strong>${formatMoney(totalMinor)}</strong></div>
+      </div>
+      <button type="button" id="checkout-button" class="btn btn-primary btn-full">Continuă la plată</button>
+      <p class="helper-text">Livrare estimată în 24-48h pentru comenzile confirmate.</p>
+    </div>
+  `;
+}
+
+async function renderCartPage() {
+  const itemsHost = qs('#cart-items');
+  const summaryHost = qs('#cart-summary');
+  const panel = qs('#cod-panel');
+  const form = qs('#cod-form');
+
+  if (!itemsHost || !summaryHost || !panel || !form) return;
+
+  itemsHost.innerHTML = skeletonCards(2);
+  summaryHost.innerHTML = '';
+
+  try {
+    const items = await cartGet();
+    setCartCounter(items);
+
+    if (!items.length) {
+      itemsHost.innerHTML = `
+        <div class="empty-state cart-empty">
+          <div class="icon-badge">${icon('shopping-cart', 'icon-xl')}</div>
+          <h2>Coșul tău este gol</h2>
+          <p>Descoperă produsele noastre și adaugă în coș.</p>
+          <a class="btn btn-primary" href="categories.html">Vezi produsele</a>
+        </div>
+      `;
+      summaryHost.innerHTML = '';
+      panel.classList.remove('is-open');
       return;
     }
 
-    // dacă răspunsul e ciudat, tot pe COD mergem
-    const order = await createCodOrder();
-    finalizeOrder(order);
-  } catch (err) {
-    // Stripe neconfigurat / 400 / 404 / etc → creăm comandă COD
-    const msg = String(err && err.message || '');
-    if (msg.includes('Stripe') || /400|404|422|501/.test(msg) || msg.includes('neconfigurat')) {
+    const subtotalMinor = items.reduce((sum, item) => {
+      const unitPrice = item.product?.price ?? item.price ?? 0;
+      const quantity = item.quantity ?? item.qty ?? 1;
+      return sum + toMinor(unitPrice) * quantity;
+    }, 0);
+
+    itemsHost.innerHTML = `
+      <div class="cart-items-list">
+        ${items.map((item) => {
+          const product = item.product || {};
+          const quantity = Number(item.quantity || item.qty || 1);
+          const unitPrice = toMinor(product.price ?? item.price ?? 0);
+          const lineTotal = unitPrice * quantity;
+          return `
+            <article class="cart-item-card" data-item-id="${item.id}">
+              <img src="${escapeHtml(product.image_url || 'images/product-placeholder.png')}" alt="${escapeHtml(product.name || 'Produs')}">
+              <div class="cart-item-meta">
+                <h3>${escapeHtml(product.name || 'Produs')}</h3>
+                <p>${escapeHtml(product.category || 'Produs standard')}</p>
+                <div class="cart-item-price"><span class="helper-text">Preț / bucată</span><strong>${formatMoney(unitPrice, product.currency)}</strong></div>
+              </div>
+              <div class="qty-stepper" aria-label="Cantitate">
+                <button type="button" data-cart-action="decrease">−</button>
+                <span>${quantity}</span>
+                <button type="button" data-cart-action="increase">+</button>
+              </div>
+              <div class="cart-item-total"><span class="helper-text">Total</span><strong>${formatMoney(lineTotal, product.currency)}</strong></div>
+              <button type="button" class="btn btn-ghost" data-cart-action="remove">${icon('trash-2')}Șterge</button>
+            </article>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    summaryHost.innerHTML = cartSummaryTemplate(subtotalMinor);
+    renderIcons(itemsHost);
+    renderIcons(summaryHost);
+
+    qs('#sum-products').textContent = formatMoney(subtotalMinor);
+    qs('#sum-shipping').textContent = formatMoney(SHIPPING_MINOR);
+    qs('#sum-total').textContent = formatMoney(subtotalMinor + SHIPPING_MINOR);
+
+    itemsHost.onclick = async (event) => {
+      const actionButton = event.target.closest('[data-cart-action]');
+      const row = event.target.closest('[data-item-id]');
+      if (!actionButton || !row) return;
+
+      const itemId = Number(row.dataset.itemId);
+      const currentItem = items.find((item) => Number(item.id) === itemId);
+      if (!currentItem) return;
+      const currentQuantity = Number(currentItem.quantity || 1);
+
+      actionButton.disabled = true;
       try {
-        const order = await createCodOrder();
-        finalizeOrder(order);
-        return;
-      } catch (e2) {
-        console.error('createCodOrder error:', e2);
-        alert('Nu am putut plasa comanda ramburs.\n' + (e2.message || ''));
+        if (actionButton.dataset.cartAction === 'remove') {
+          await cartRemove(itemId);
+        } else {
+          const nextQuantity = actionButton.dataset.cartAction === 'increase'
+            ? currentQuantity + 1
+            : Math.max(1, currentQuantity - 1);
+          await cartUpdate(itemId, nextQuantity);
+        }
+        await renderCartPage();
+      } catch (error) {
+        showToast(error.message || 'Nu am putut actualiza coșul.', 'error');
+      }
+    };
+
+    qs('#checkout-button')?.addEventListener('click', () => {
+      panel.classList.add('is-open');
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    form.onsubmit = async (event) => {
+      event.preventDefault();
+      const formData = new FormData(form);
+      const payload = {
+        full_name: String(formData.get('full_name') || '').trim(),
+        phone: String(formData.get('phone') || '').trim(),
+        address: String(formData.get('address') || '').trim()
+      };
+
+      if (!payload.full_name || !payload.phone || !payload.address) {
+        showToast('Completează toate câmpurile pentru livrare.', 'error');
         return;
       }
+
+      const submitButton = qs('button[type="submit"]', form);
+      submitButton.disabled = true;
+
+      try {
+        const order = await createCodOrder(payload);
+        await clearServerCart();
+        location.href = `success.html?id=${encodeURIComponent(order.id || order.order_id || '')}`;
+      } catch (error) {
+        showToast(error.message || 'Nu am putut plasa comanda.', 'error');
+      } finally {
+        submitButton.disabled = false;
+      }
+    };
+  } catch (error) {
+    if (error.status === 401) {
+      location.href = `login.html?next=${encodeURIComponent(currentRelativeUrl())}`;
+      return;
     }
-    console.error('checkout error:', err);
-    alert('Nu am putut porni plata.\n' + msg);
+    itemsHost.innerHTML = `<div class="empty-state"><div class="icon-badge">${icon('package', 'icon-xl')}</div><h2>Nu am putut încărca coșul</h2><p>${escapeHtml(error.message || 'Încearcă din nou mai târziu.')}</p></div>`;
   }
 }
 
-// redirect / confirmare după creare comandă
-function finalizeOrder(order) {
-  const id = order?.id ?? order?.order_id ?? null;
-  if (id) {
-    // poți face o pagină success sau trimite la cont
-    location.href = 'success.html?id=' + encodeURIComponent(id);
-  } else {
-    alert('Comanda a fost înregistrată.');
-    location.href = 'account.html';
+function passwordStrength(password) {
+  let score = 0;
+  if (password.length >= 8) score += 1;
+  if (/[A-Z]/.test(password)) score += 1;
+  if (/[0-9]/.test(password)) score += 1;
+  if (/[^A-Za-z0-9]/.test(password)) score += 1;
+  return score;
+}
+
+function updatePasswordStrength(password) {
+  const bars = qsa('[data-strength-bar]');
+  const label = qs('#password-strength-label');
+  const score = passwordStrength(password);
+  const tone = score <= 1 ? 'weak' : score <= 3 ? 'medium' : 'strong';
+  const labelText = score <= 1 ? 'Parolă slabă' : score <= 3 ? 'Parolă medie' : 'Parolă puternică';
+
+  bars.forEach((bar, index) => {
+    bar.className = 'password-strength-bar';
+    if (index < score) bar.classList.add('is-active', tone);
+  });
+
+  if (label) label.textContent = password ? labelText : 'Folosește minimum 8 caractere.';
+}
+
+function bindPasswordToggles(root = document) {
+  qsa('[data-password-toggle]', root).forEach((button) => {
+    button.addEventListener('click', () => {
+      const input = qs(`#${button.dataset.passwordToggle}`, root) || qs(`#${button.dataset.passwordToggle}`);
+      if (!input) return;
+      const nextType = input.type === 'password' ? 'text' : 'password';
+      input.type = nextType;
+      button.setAttribute('aria-label', nextType === 'password' ? 'Arată parola' : 'Ascunde parola');
+      button.innerHTML = icon(nextType === 'password' ? 'eye' : 'eye-off');
+    });
+  });
+}
+
+function bindAccountTabs() {
+  const buttons = qsa('[data-account-panel]');
+  const panels = qsa('.account-panel');
+  if (!buttons.length || !panels.length) return;
+
+  function activate(panelName) {
+    buttons.forEach((button) => button.classList.toggle('is-active', button.dataset.accountPanel === panelName));
+    panels.forEach((panel) => panel.classList.toggle('is-active', panel.id === `account-panel-${panelName}`));
   }
+
+  buttons.forEach((button) => button.addEventListener('click', () => activate(button.dataset.accountPanel)));
 }
 
+function renderOrders(host, orders) {
+  if (!host) return;
+  if (!orders.length) {
+    host.innerHTML = `
+      <div class="empty-state">
+        <div class="icon-badge">${icon('package', 'icon-xl')}</div>
+        <h3>Nu ai comenzi încă</h3>
+        <p>Comenzile tale vor apărea aici după prima achiziție.</p>
+        <a class="btn btn-primary" href="categories.html">Începe cumpărăturile</a>
+      </div>
+    `;
+    return;
+  }
 
-// BUG-01: a doua definitie createCodOrder() a fost stearsa (suprascriau functia corecta de la linia 48)
-// BUG-17: a doua definitie clearServerCart() a fost stearsa (duplicat pur)
-// BUG-18: setupAccountPage() eliminata — renderAccountPage() gestioneaza deja comenzile
+  host.innerHTML = orders.map((order) => {
+    const items = Array.isArray(order.items) ? order.items : [];
+    const totalItems = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    const detailsId = `order-details-${order.id}`;
+    return `
+      <article class="order-card">
+        <div class="order-card-header">
+          <div>
+            <h3>Comanda #${escapeHtml(order.invoice_no || String(order.id || ''))}</h3>
+            <p>${order.created_at ? new Date(order.created_at).toLocaleDateString('ro-RO') : 'Data indisponibilă'}</p>
+          </div>
+          <span class="status-badge ${statusClass(order.status)}">${escapeHtml(statusLabel(order.status))}</span>
+        </div>
+        <div class="order-card-summary">
+          <span>${totalItems} produse</span>
+          <strong>${formatMoney(order.total_amount, order.currency)}</strong>
+        </div>
+        <button type="button" class="inline-link order-details-toggle" data-order-toggle="${detailsId}">Vezi detalii</button>
+        <div id="${detailsId}" class="helper-text hidden">
+          ${items.map((item) => `<div>${escapeHtml(item.product?.name || 'Produs')} × ${Number(item.quantity || 0)}</div>`).join('')}
+        </div>
+      </article>
+    `;
+  }).join('');
 
-function minorToText(v, curr = 'RON') {
-  const n = Number(v || 0);
-  return (n / 100).toFixed(2).replace('.', ',') + ' ' + curr.toUpperCase();
+  qsa('[data-order-toggle]', host).forEach((button) => {
+    button.addEventListener('click', () => {
+      const details = qs(`#${button.dataset.orderToggle}`, host);
+      if (!details) return;
+      details.classList.toggle('hidden');
+      button.textContent = details.classList.contains('hidden') ? 'Vezi detalii' : 'Ascunde detaliile';
+    });
+  });
 }
 
-// === MOBILE MENU ===
-function setupMobileMenu() {
-  const toggle = document.querySelector('.mobile-menu-toggle');
-  const nav = document.querySelector('.main-nav');
-  if (!toggle || !nav) return;
+async function renderAccountPage(user) {
+  if (!qs('.account-layout')) return;
+  if (!user) {
+    location.href = `login.html?next=${encodeURIComponent(currentRelativeUrl())}`;
+    return;
+  }
 
-  toggle.setAttribute('aria-expanded', 'false');
+  qs('#account-email').textContent = user.email || '';
+  qs('#account-summary-email').textContent = user.email || '-';
+  bindAccountTabs();
+  bindPasswordToggles();
 
-  toggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const isOpen = nav.classList.toggle('open');
-    toggle.setAttribute('aria-expanded', String(isOpen));
-  });
+  const passwordInput = qs('#new-password');
+  passwordInput?.addEventListener('input', () => updatePasswordStrength(passwordInput.value));
+  updatePasswordStrength(passwordInput?.value || '');
 
-  // Event delegation — catches links injected dynamically by renderAuthHeader
-  nav.addEventListener('click', (e) => {
-    if (e.target.closest('a')) {
-      nav.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
+  qs('#logout-button')?.addEventListener('click', performLogout);
+
+  const passwordForm = qs('#change-pass-form');
+  const passwordStatus = qs('#password-status');
+  passwordForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = new FormData(passwordForm);
+    const currentPassword = String(formData.get('current_password') || '');
+    const newPassword = String(formData.get('new_password') || '');
+    const confirmPassword = String(formData.get('new_password2') || '');
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setStatusMessage(passwordStatus, 'Completează toate câmpurile.', 'error');
+      return;
     }
-  });
 
-  // Escape key closes menu and returns focus to toggle
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && nav.classList.contains('open')) {
-      nav.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-      toggle.focus();
+    if (newPassword !== confirmPassword) {
+      setStatusMessage(passwordStatus, 'Parolele noi nu coincid.', 'error');
+      return;
     }
-  });
-
-  // Outside click closes menu
-  document.addEventListener('click', (e) => {
-    if (!toggle.contains(e.target) && !nav.contains(e.target)) {
-      nav.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-    }
-  });
-}
-
-// === CUSTOM REQUEST FORM (custom.html) ===
-function hookCustomForm() {
-  const form = document.querySelector('#custom-form');
-  if (!form) return;
-
-  // Redirect to login if not authenticated
-  fetchMe().then(me => {
-    if (!me) {
-      location.href = 'login.html?next=custom.html';
-    }
-  });
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) submitBtn.disabled = true;
 
     try {
-      const fd = new FormData();
-      const emailEl = document.querySelector('#custom-email');
-      const descEl = document.querySelector('#custom-description');
-      const filesEl = document.querySelector('#custom-files');
+      await changePassword(currentPassword, newPassword);
+      setStatusMessage(passwordStatus, 'Parola a fost schimbată cu succes.', 'success');
+      passwordForm.reset();
+      updatePasswordStrength('');
+    } catch (error) {
+      setStatusMessage(passwordStatus, error.message || 'Nu am putut schimba parola.', 'error');
+    }
+  });
 
-      if (!emailEl?.value) { alert('Completează adresa de email.'); return; }
-      fd.append('email', emailEl.value.trim());
-      if (descEl?.value) fd.append('description', descEl.value.trim());
-      if (filesEl?.files) {
-        for (const f of filesEl.files) {
-          fd.append('files', f);
-        }
-      }
+  const ordersHost = qs('#orders-host');
+  if (ordersHost) ordersHost.innerHTML = skeletonCards(2);
 
-      const res = await fetch(API_BASE + '/custom-requests', {
-        method: 'POST',
-        body: fd,
-        credentials: 'include',
-        cache: 'no-store'
-      });
+  try {
+    const orders = await fetchOrders();
+    renderOrders(ordersHost, orders);
+  } catch (error) {
+    ordersHost.innerHTML = `<div class="empty-state"><div class="icon-badge">${icon('package', 'icon-xl')}</div><h3>Nu am putut încărca comenzile</h3><p>${escapeHtml(error.message || 'Încearcă din nou mai târziu.')}</p></div>`;
+  }
+}
 
-      if (res.status === 401) { location.href = 'login.html?next=custom.html'; return; }
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || ('HTTP ' + res.status));
-      }
+function getSelectedFiles(fileInput) {
+  return Array.from(fileInput?.files || []);
+}
 
-      const successEl = document.querySelector('#custom-success');
-      if (successEl) {
-        successEl.textContent = 'Cererea ta a fost trimisă cu succes. Te vom contacta în curând!';
-        successEl.classList.remove('hidden');
-      }
+function validateFiles(files) {
+  if (files.length > MAX_UPLOAD_FILES) {
+    return `Poți încărca maximum ${MAX_UPLOAD_FILES} fișiere.`;
+  }
+
+  for (const file of files) {
+    const extension = `.${String(file.name).split('.').pop().toLowerCase()}`;
+    if (!ALLOWED_UPLOAD_EXTENSIONS.includes(extension)) {
+      return `Tip fișier neacceptat: ${extension}`;
+    }
+    if (file.size > MAX_UPLOAD_SIZE) {
+      return `Fișierul ${file.name} depășește limita de 5MB.`;
+    }
+  }
+
+  return '';
+}
+
+function renderFilePreviews(fileInput) {
+  const previewHost = qs('#file-preview-grid');
+  if (!previewHost) return;
+  const files = getSelectedFiles(fileInput);
+  previewHost.innerHTML = files.map((file) => {
+    const isImage = file.type.startsWith('image/');
+    const preview = isImage ? `<img src="${URL.createObjectURL(file)}" alt="${escapeHtml(file.name)}">` : `<div class="icon-badge">${icon('package', 'icon-lg')}</div>`;
+    return `
+      <div class="file-preview">
+        <div class="file-preview-thumb">${preview}</div>
+        <div class="file-preview-name">${escapeHtml(file.name)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function bindDropzone(fileInput) {
+  const dropzone = qs('#custom-dropzone');
+  if (!dropzone || !fileInput) return;
+
+  ['dragenter', 'dragover'].forEach((eventName) => {
+    dropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropzone.classList.add('is-dragging');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach((eventName) => {
+    dropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropzone.classList.remove('is-dragging');
+    });
+  });
+
+  dropzone.addEventListener('drop', (event) => {
+    const files = Array.from(event.dataTransfer?.files || []);
+    const transfer = new DataTransfer();
+    files.forEach((file) => transfer.items.add(file));
+    fileInput.files = transfer.files;
+    renderFilePreviews(fileInput);
+  });
+
+  fileInput.addEventListener('change', () => renderFilePreviews(fileInput));
+}
+
+async function renderCustomPage(user) {
+  const form = qs('#custom-form');
+  if (!form) return;
+  if (!user) {
+    location.href = `login.html?next=${encodeURIComponent(currentRelativeUrl())}`;
+    return;
+  }
+
+  const emailField = qs('#custom-email');
+  if (emailField && user.email) emailField.value = user.email;
+
+  const fileInput = qs('#custom-files');
+  bindDropzone(fileInput);
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearFieldErrors(form);
+    setStatusMessage(qs('#custom-success'), '', 'success');
+
+    const nameField = qs('#custom-name');
+    const descriptionField = qs('#custom-description');
+    const files = getSelectedFiles(fileInput);
+
+    let hasError = false;
+    if (!String(nameField?.value || '').trim()) {
+      setFieldError(qs('[data-field="name"]', form), 'Completează numele complet.');
+      hasError = true;
+    }
+    if (!isValidEmail(emailField?.value || '')) {
+      setFieldError(qs('[data-field="email"]', form), 'Introdu o adresă de email validă.');
+      hasError = true;
+    }
+    if (!String(descriptionField?.value || '').trim()) {
+      setFieldError(qs('[data-field="description"]', form), 'Descrie produsul dorit.');
+      hasError = true;
+    }
+
+    const fileError = validateFiles(files);
+    if (fileError) {
+      setFieldError(qs('[data-field="files"]', form), fileError);
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    const payload = new FormData();
+    payload.append('email', String(emailField.value).trim());
+    payload.append('description', `Nume: ${String(nameField.value).trim()}\n\n${String(descriptionField.value).trim()}`);
+    files.forEach((file) => payload.append('files', file));
+
+    const submitButton = qs('button[type="submit"]', form);
+    submitButton.disabled = true;
+
+    try {
+      await request('/custom-requests', { method: 'POST', data: payload });
+      setStatusMessage(qs('#custom-success'), 'Cererea ta a fost trimisă cu succes. Te vom contacta în curând!', 'success');
       form.reset();
-    } catch (err) {
-      alert('Nu am putut trimite cererea.\n' + (err.message || ''));
-      console.error(err);
+      renderFilePreviews(fileInput);
+    } catch (error) {
+      setStatusMessage(qs('#custom-success'), error.message || 'Nu am putut trimite cererea.', 'error');
     } finally {
-      if (submitBtn) submitBtn.disabled = false;
+      submitButton.disabled = false;
     }
   });
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-  setupMobileMenu();
+function validateAuthField(form, key, message) {
+  const field = qs(`[data-field="${key}"]`, form);
+  if (field) setFieldError(field, message);
+}
+
+function bindLoginForm() {
+  const form = qs('#login-form');
+  if (!form) return;
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearFieldErrors(form);
+    const status = qs('#login-status');
+    setStatusMessage(status, '', 'success');
+
+    const formData = new FormData(form);
+    const email = String(formData.get('email') || '').trim();
+    const password = String(formData.get('password') || '');
+    let hasError = false;
+
+    if (!isValidEmail(email)) {
+      validateAuthField(form, 'email', 'Introdu o adresă de email validă.');
+      hasError = true;
+    }
+    if (!password) {
+      validateAuthField(form, 'password', 'Introdu parola.');
+      hasError = true;
+    }
+    if (hasError) return;
+
+    const submitButton = qs('button[type="submit"]', form);
+    submitButton.disabled = true;
+
+    try {
+      await request('/auth/login', { method: 'POST', data: { email, password } });
+      const next = param('next');
+      location.href = next || 'account.html';
+    } catch (error) {
+      setStatusMessage(status, error.message || 'Autentificare eșuată.', 'error');
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+}
+
+function bindRegisterForm() {
+  const form = qs('#register-form');
+  if (!form) return;
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearFieldErrors(form);
+    const status = qs('#register-status');
+    setStatusMessage(status, '', 'success');
+
+    const formData = new FormData(form);
+    const email = String(formData.get('email') || '').trim();
+    const password = String(formData.get('password') || '');
+    const confirm = String(formData.get('password_confirm') || '');
+    let hasError = false;
+
+    if (!isValidEmail(email)) {
+      validateAuthField(form, 'email', 'Introdu o adresă de email validă.');
+      hasError = true;
+    }
+    if (password.length < 8) {
+      validateAuthField(form, 'password', 'Parola trebuie să aibă minimum 8 caractere.');
+      hasError = true;
+    }
+    if (password !== confirm) {
+      validateAuthField(form, 'password-confirm', 'Parolele nu coincid.');
+      hasError = true;
+    }
+    if (hasError) return;
+
+    const submitButton = qs('button[type="submit"]', form);
+    submitButton.disabled = true;
+
+    try {
+      await request('/auth/register', { method: 'POST', data: { email, password } });
+      setStatusMessage(status, 'Cont creat. Te poți autentifica acum.', 'success');
+      setTimeout(() => { location.href = 'login.html'; }, 800);
+    } catch (error) {
+      setStatusMessage(status, error.message || 'Înregistrare eșuată.', 'error');
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+}
+
+function renderSuccessPage() {
+  const host = qs('#success-order-id');
+  if (!host) return;
+  const orderId = param('id');
+  host.textContent = orderId ? `Număr comandă: #${orderId}` : 'Comanda a fost preluată în sistem.';
+}
+
+async function bootstrap() {
   const me = await fetchMe();
-  renderAuthHeader(me);
-  hookLoginForm();
-  hookRegisterForm();
-  hookCustomForm();  // MED-D: handle custom request form submission
-  renderCategories();
-  setupCategoryPage();
-  setupProductPage();
-  renderCartPageServer();
-  setupHomePopular();
-  initHeaderCartCount();
-  renderAccountPage(); // singura functie de cont — gestioneaza email, parola, comenzi
+  renderHeader(me);
+  renderFooter();
+  renderCookieBanner();
+  renderIcons(document);
+  bindGlobalProductActions();
+  bindLoginForm();
+  bindRegisterForm();
+  renderSuccessPage();
+  await initHeaderState();
+
+  if (CURRENT_PAGE === 'home') await renderHomePage();
+  if (qs('#catalog-products-grid')) await renderCatalogLandingPage();
+  if (qs('#products-list')) await renderCategoryPage();
+  if (qs('#product-detail')) await renderProductPage();
+  if (CURRENT_PAGE === 'cart') await renderCartPage();
+  if (CURRENT_PAGE === 'account') await renderAccountPage(me);
+  if (CURRENT_PAGE === 'custom') await renderCustomPage(me);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  bootstrap().catch((error) => {
+    console.error(error);
+    showToast('A apărut o eroare la inițializarea paginii.', 'error');
+  });
 });

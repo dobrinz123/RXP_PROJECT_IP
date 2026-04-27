@@ -3,83 +3,100 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contul meu – RXP CUSTOM3D</title>
+  <title>Contul meu - RXP CUSTOM3D</title>
   <link rel="stylesheet" href="style.css">
-  <script defer src="script.js?v=2"></script>
+  <script defer src="script.js?v=20260427"></script>
 </head>
-<body>
-  <!-- Header -->
-  <header class="site-header">
-    <div class="container header-container">
-      <div class="logo">
-        <span class="logo-title">RXP CUSTOM3D</span>
-        <span class="logo-subtitle">3D Print Shop</span>
-      </div>
-      <button class="mobile-menu-toggle" aria-label="Toggle menu">&#9776;</button>
-            <nav class="main-nav">
-        <ul>
-          <li><a href="index.html">Acasă</a></li>
-          <li><a href="categories.html">Produse</a></li>
-          <li><a href="custom.html">Personalizare</a></li>
-          <li><a href="index.html#despre">Despre</a></li>
-          <li><a href="index.html#contact">Contact</a></li>
-        </ul>
-      </nav>
-      <div class="cart-nav">
-        <a href="cart.html">Coș (<span id="cart-count">0</span>)</a>
-      </div>
-      <!-- IMPORTANT: lăsăm JS-ul să pună emailul aici -->
-      <div class="user-nav" id="user-nav"></div>
-    </div>
-  </header>
+<body data-page="account">
+  <div id="site-header"></div>
 
-  <!-- Main content -->
-  <main>
+  <main class="page-shell">
     <div class="container">
-      <h2>Contul meu</h2>
-      <p id="account-email" style="margin-top:-6px;color:#666"></p>
+      <div class="account-layout">
+        <aside class="account-sidebar">
+          <div>
+            <h1 class="page-title">Contul meu</h1>
+            <p id="account-email" class="helper-text">Se încarcă datele contului.</p>
+          </div>
 
-      <hr style="margin:1rem 0;border:none;height:1px;background:#eee">
+          <nav class="account-nav" aria-label="Secțiuni cont">
+            <button class="account-nav-button is-active" type="button" data-account-panel="overview"><span data-icon="user"></span>Date cont</button>
+            <button class="account-nav-button" type="button" data-account-panel="password"><span data-icon="lock"></span>Schimbă parola</button>
+            <button class="account-nav-button" type="button" data-account-panel="orders"><span data-icon="receipt"></span>Comenzile mele</button>
+          </nav>
 
-      <!-- Schimbă parola -->
-      <section class="auth-section" style="max-width:520px">
-        <h3>Schimbă parola</h3>
-        <form id="change-pass-form" style="display:grid;gap:.6rem">
-          <label>Parola curentă
-            <input type="password" name="current_password" required>
-          </label>
-          <label>Parola nouă
-            <input type="password" name="new_password" required>
-          </label>
-          <label>Confirmă parola nouă
-            <input type="password" name="new_password2" required>
-          </label>
-          <button type="submit" class="action-btn">Salvează</button>
-        </form>
-        <p style="margin-top:.75rem">
-          <a href="#" id="logout-link" style="color:#d9534f">Logout</a>
-        </p>
-      </section>
+          <button id="logout-button" type="button" class="btn btn-danger btn-full"><span data-icon="log-out"></span>Deconectare</button>
+        </aside>
 
-      <!-- Comenzile mele -->
-      <section class="orders-list" style="margin-top:2rem">
-        <h2>Comenzile mele</h2>
-        <div id="orders-host"><p>Se încarcă…</p></div>
-      </section>
+        <div class="account-content">
+          <section id="account-panel-overview" class="account-panel is-active">
+            <div class="account-summary">
+              <h2>Date cont</h2>
+              <div class="detail-list">
+                <div class="detail-row"><span>Email</span><strong id="account-summary-email">-</strong></div>
+                <div class="detail-row"><span>Status cont</span><strong id="account-summary-status">Client activ</strong></div>
+                <div class="detail-row"><span>Autentificare</span><strong>Cookie securizat prin HTTPS</strong></div>
+              </div>
+            </div>
+          </section>
 
-      <!-- Administrare comenzi (vizibil doar pentru admin, dacă vrei mai târziu) -->
-      <section id="admin-orders" class="admin-orders hidden">
-        <h2>Administrare comenzi (Admin)</h2>
-        <div id="all-orders-list" class="orders-list"></div>
-      </section>
+          <section id="account-panel-password" class="account-panel">
+            <div class="account-summary" style="max-width: 480px;">
+              <h2>Schimbă parola</h2>
+              <p>Actualizează parola fără să părăsești pagina contului.</p>
+
+              <form id="change-pass-form" novalidate>
+                <div class="field">
+                  <label class="field-label" for="current-password">Parola curentă</label>
+                  <div class="password-field">
+                    <input class="input" type="password" id="current-password" name="current_password" required>
+                    <button class="password-toggle" type="button" data-password-toggle="current-password" aria-label="Arată parola"><span data-icon="eye"></span></button>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="new-password">Parola nouă</label>
+                  <div class="password-field">
+                    <input class="input" type="password" id="new-password" name="new_password" required>
+                    <button class="password-toggle" type="button" data-password-toggle="new-password" aria-label="Arată parola"><span data-icon="eye"></span></button>
+                  </div>
+                  <div class="password-strength">
+                    <div class="password-strength-bars" aria-hidden="true">
+                      <span class="password-strength-bar" data-strength-bar></span>
+                      <span class="password-strength-bar" data-strength-bar></span>
+                      <span class="password-strength-bar" data-strength-bar></span>
+                      <span class="password-strength-bar" data-strength-bar></span>
+                    </div>
+                    <span id="password-strength-label" class="helper-text">Folosește minimum 8 caractere.</span>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="confirm-password">Confirmă parola nouă</label>
+                  <div class="password-field">
+                    <input class="input" type="password" id="confirm-password" name="new_password2" required>
+                    <button class="password-toggle" type="button" data-password-toggle="confirm-password" aria-label="Arată parola"><span data-icon="eye"></span></button>
+                  </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">Salvează</button>
+                <p id="password-status" class="status-message hidden" role="status" aria-live="polite"></p>
+              </form>
+            </div>
+          </section>
+
+          <section id="account-panel-orders" class="account-panel">
+            <div class="account-summary">
+              <h2>Comenzile mele</h2>
+              <p>Istoricul comenzilor este încărcat din API și rămâne neschimbat la nivel de date.</p>
+              <div id="orders-host" class="order-list" aria-live="polite"></div>
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
   </main>
 
-  <!-- Footer -->
-  <footer class="site-footer">
-    <div class="container footer-container">
-      <span class="footer-brand">RXPCUSTOM3D</span>
-    </div>
-  </footer>
+  <div id="site-footer"></div>
 </body>
 </html>

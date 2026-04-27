@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700&display=swap');
+
+@font-face {
+  font-family: 'Dodger';
+  src: url('fonts/Dodger.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --color-primary: #E8851A;
+  --color-primary-hover: #D17414;
+  --color-primary-light: #FFF4E6;
+  --color-neutral-900: #1A1A1A;
+  --color-neutral-700: #4A4A4A;
+  --color-neutral-500: #8A8A8A;
+  --color-neutral-300: #D1D1D1;
+  --color-neutral-100: #F5F5F5;
+  --color-neutral-50: #FAFAFA;
+  --color-white: #FFFFFF;
+  --color-success: #16A34A;
+  --color-error: #DC2626;
+  --color-warning: #F59E0B;
+
+  --font-display: 'Orbitron', 'Bank Gothic', 'Dodger', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  --text-h1-size: 48px;
+  --text-h1-line: 56px;
+  --text-h2-size: 32px;
+  --text-h2-line: 40px;
+  --text-h3-size: 20px;
+  --text-h3-line: 28px;
+  --text-body-lg-size: 18px;
+  --text-body-lg-line: 28px;
+  --text-body-size: 16px;
+  --text-body-line: 24px;
+  --text-body-sm-size: 14px;
+  --text-body-sm-line: 20px;
+  --text-caption-size: 12px;
+  --text-caption-line: 16px;
+
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-48: 48px;
+  --space-64: 64px;
+  --space-96: 96px;
+  --space-128: 128px;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+
+  --transition-base: all 200ms ease-in-out;
+  --container-width: 1200px;
+  --focus-ring: 0 0 0 3px rgba(232, 133, 26, 0.18);
+}

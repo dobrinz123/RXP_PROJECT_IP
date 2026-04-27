@@ -1,51 +1,28 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Categorie – RXP CUSTOM3D</title>
-  <link rel="stylesheet" href="style.css"/>
-  <script defer src="script.js?v=2"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Categorie - RXP CUSTOM3D</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js?v=20260427"></script>
 </head>
-<body class="category-page">
-  <header class="site-header">
-    <div class="container header-container">
-      <div class="logo">
-        <span class="logo-title">RXP CUSTOM3D</span>
-        <span class="logo-subtitle">3D Print Shop</span>
-      </div>
-      <button class="mobile-menu-toggle" aria-label="Toggle menu">&#9776;</button>
-            <nav class="main-nav">
-        <ul>
-          <li><a href="index.html">Acasă</a></li>
-          <li><a class="active" href="categories.html">Produse</a></li>
-          <li><a href="custom.html">Personalizare</a></li>
-          <li><a href="index.html#despre">Despre</a></li>
-          <li><a href="index.html#contact">Contact</a></li>
-        </ul>
-      </nav>
-      <div class="cart-nav">
-        <a href="cart.html">Coș (<span id="cart-count">0</span>)</a>
-      </div>
-      <div class="user-nav" id="user-nav"></div>
-    </div>
-  </header>
+<body data-page="products">
+  <div id="site-header"></div>
 
-  <main class="category-page">
+  <main class="page-shell page-shell-sm">
     <div class="container">
-      <h1 id="category-title" class="page-title"></h1>
-      <p id="category-description" class="category-description"></p>
+      <div class="section-heading">
+        <span class="section-eyebrow">Produse</span>
+        <h1 id="category-title" class="page-title">Categorie</h1>
+        <p id="category-description" class="page-copy">Se încarcă produsele pentru categoria selectată.</p>
+      </div>
 
-      <div id="filter-container" style="margin:12px 0;"></div>
-
-      <div id="products-list" class="product-grid dark-grid"></div>
+      <div id="filter-container" class="filter-toolbar"></div>
+      <div id="products-list" class="products-grid" aria-live="polite"></div>
     </div>
   </main>
 
-  <footer class="site-footer">
-    <div class="container footer-container">
-      <span class="footer-brand">RXPCUSTOM3D</span>
-    </div>
-  </footer>
+  <div id="site-footer"></div>
 </body>
 </html>

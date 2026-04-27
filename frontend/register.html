@@ -1,58 +1,52 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Înregistrare</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Înregistrare - RXP CUSTOM3D</title>
   <link rel="stylesheet" href="style.css">
-  <script defer src="script.js?v=auth5"></script>
+  <script defer src="script.js?v=20260427"></script>
 </head>
-<body>
-  <header class="site-header">
-    <div class="container header-container">
-      <div class="logo">
-        <span class="logo-title">RXP CUSTOM3D</span>
-        <span class="logo-subtitle">3D Print Shop</span>
-      </div>
-      <button class="mobile-menu-toggle" aria-label="Toggle menu">&#9776;</button>
-            <nav class="main-nav">
-        <ul>
-          <li><a href="index.html">Acasă</a></li>
-          <li><a href="categories.html">Produse</a></li>
-          <li><a href="custom.html">Personalizare</a></li>
-          <li><a href="index.html#despre">Despre</a></li>
-          <li><a href="index.html#contact">Contact</a></li>
-        </ul>
-      </nav>
-      <div class="cart-nav"><a href="cart.html">Coș (<span id="cart-count">0</span>)</a></div>
-      <div class="user-nav" id="user-nav"></div>
+<body data-page="register">
+  <div id="site-header"></div>
+
+  <main class="auth-page page-shell">
+    <div class="container" style="max-width: 520px;">
+      <section class="auth-card">
+        <div class="page-intro">
+          <span class="section-eyebrow">Cont nou</span>
+          <h1 class="page-title">Înregistrare</h1>
+          <p>Creează un cont pentru a continua comenzile și pentru a urmări istoricul din contul tău.</p>
+        </div>
+
+        <form id="register-form" novalidate>
+          <div class="field" data-field="email">
+            <label class="field-label" for="register-email">Email</label>
+            <input class="input" type="email" id="register-email" name="email" required>
+            <p class="field-error" hidden></p>
+          </div>
+
+          <div class="field" data-field="password">
+            <label class="field-label" for="register-password">Parolă</label>
+            <input class="input" type="password" id="register-password" name="password" required>
+            <p class="field-error" hidden></p>
+          </div>
+
+          <div class="field" data-field="password-confirm">
+            <label class="field-label" for="register-password-confirm">Confirmă parola</label>
+            <input class="input" type="password" id="register-password-confirm" name="password_confirm" required>
+            <p class="field-error" hidden></p>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full">Înregistrează-te</button>
+          <p id="register-status" class="status-message hidden" role="status" aria-live="polite"></p>
+        </form>
+
+        <p class="helper-text" style="margin-top: 24px;">Ai deja cont? <a class="inline-link" href="login.html">Autentifică-te aici</a>.</p>
+      </section>
     </div>
-  </header>
-
-  <main class="container auth-section">
-    <section>
-      <h2 class="site-title">Înregistrare</h2>
-      <!-- fără action, lăsăm JS să trimită JSON -->
-      <form id="register-form">
-        <label for="register-email">Email</label>
-        <input type="email" id="register-email" name="email" required />
-
-        <label for="register-password">Parolă</label>
-        <input type="password" id="register-password" name="password" required />
-
-        <label for="register-password-confirm">Confirmă parola</label>
-        <input type="password" id="register-password-confirm" required />
-
-        <button type="submit" class="action-btn">Înregistrează-te</button>
-        <p>Ai deja cont? <a href="login.html">Autentifică-te aici</a>.</p>
-      </form>
-    </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="container footer-container">
-      <span class="footer-brand">RXPCUSTOM3D</span>
-    </div>
-  </footer>
+  <div id="site-footer"></div>
 </body>
 </html>

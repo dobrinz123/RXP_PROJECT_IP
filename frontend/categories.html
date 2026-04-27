@@ -1,67 +1,191 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Catalog – RXP CUSTOM3D</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produse - RXP CUSTOM3D</title>
   <link rel="stylesheet" href="style.css">
-  <script defer src="script.js?v=2"></script>
+  <script defer src="script.js?v=20260427-catalog"></script>
 </head>
-<body>
-  <header class="site-header">
-    <div class="container header-container">
-      <div class="logo">
-        <span class="logo-title">RXP CUSTOM3D</span>
-        <span class="logo-subtitle">3D Print Shop</span>
-      </div>
-      <button class="mobile-menu-toggle" aria-label="Toggle menu">&#9776;</button>
-            <nav class="main-nav">
-        <ul>
+<body data-page="products" class="catalog-page">
+  <div id="site-header"></div>
+
+  <main class="page-shell page-shell-sm">
+    <div class="container catalog-page-container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+        <ol class="breadcrumb-list">
           <li><a href="index.html">Acasă</a></li>
-          <li><a href="categories.html">Produse</a></li>
-          <li><a href="custom.html">Personalizare</a></li>
-          <li><a href="index.html#despre">Despre</a></li>
-          <li><a href="index.html#contact">Contact</a></li>
-        </ul>
+          <li aria-current="page">Produse</li>
+        </ol>
       </nav>
-      <div class="cart-nav">
-        <a href="cart.html">Coș (<span id="cart-count">0</span>)</a>
+
+      <header class="catalog-hero">
+        <div class="eyebrow eyebrow-decorated">
+          <span class="eyebrow-line" aria-hidden="true"></span>
+          <span class="eyebrow-text">CATALOG</span>
+        </div>
+        <!-- TODO: confirm final H1 copy with stakeholder -->
+        <h1 class="catalog-title">Suporți auto premium, fabricați la comandă</h1>
+        <p class="catalog-copy">Suporți magnetici, piese de tuning și accesorii personalizate. Fabricate în România, livrate în 24-48h.</p>
+      </header>
+
+      <section class="catalog-categories-section" aria-labelledby="catalog-categories-title">
+        <div class="section-heading section-heading-tight">
+          <h2 id="catalog-categories-title" class="catalog-section-title">Categorii principale</h2>
+        </div>
+
+        <div class="catalog-categories-grid">
+          <a
+            class="catalog-category-card catalog-category-card--car"
+            href="category.html?slug=car_tuning"
+            aria-label="Vezi categoria Car Tuning, 0 de produse"
+          >
+            <span class="catalog-category-card__count" id="count-car-tuning">0 produse</span>
+            <span class="catalog-category-card__media" aria-hidden="true">
+              <!-- TODO: convert category card assets to webp -->
+              <!-- TODO: replace with branded 3D render for Car Tuning when final asset is available -->
+              <picture class="catalog-category-card__picture">
+                <img
+                  src="images/AUDI_RS.jpeg"
+                  alt=""
+                  width="3840"
+                  height="5120"
+                  loading="eager"
+                  fetchpriority="high"
+                >
+              </picture>
+            </span>
+            <span class="catalog-category-card__overlay" aria-hidden="true"></span>
+            <span class="catalog-category-card__content">
+              <h3 class="catalog-category-card__title">Car Tuning</h3>
+              <span class="catalog-category-card__description">Piese și detalii vizuale pentru un setup curat, agresiv și coerent.</span>
+              <span class="catalog-category-card__cta">Vezi produse <span class="catalog-category-card__cta-icon" data-icon="arrow-right"></span></span>
+            </span>
+          </a>
+
+          <a
+            class="catalog-category-card catalog-category-card--plates"
+            href="category.html?slug=suporti_numar"
+            aria-label="Vezi categoria Suporți număr, 0 de produse"
+          >
+            <span class="catalog-category-card__count" id="count-plate-holders">0 produse</span>
+            <span class="catalog-category-card__media" aria-hidden="true">
+              <!-- TODO: convert category card assets to webp -->
+              <!-- TODO: replace with branded 3D render for plate holders when final asset is available -->
+              <picture class="catalog-category-card__picture">
+                <img
+                  src="images/suporti-numar-card.png"
+                  alt=""
+                  width="1024"
+                  height="1024"
+                  loading="lazy"
+                >
+              </picture>
+            </span>
+            <span class="catalog-category-card__overlay" aria-hidden="true"></span>
+            <span class="catalog-category-card__content">
+              <h3 class="catalog-category-card__title">Suporți număr</h3>
+              <span class="catalog-category-card__description">Soluții magnetice premium pentru montaj rapid și aspect discret.</span>
+              <span class="catalog-category-card__cta">Vezi produse <span class="catalog-category-card__cta-icon" data-icon="arrow-right"></span></span>
+            </span>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <section class="catalog-filter-shell">
+      <div class="container catalog-page-container">
+        <div class="catalog-filter-bar" role="region" aria-label="Filtre și sortare produse">
+          <div class="catalog-filter-bar__left">
+            <div id="catalog-filter-chips" class="catalog-filter-chips" role="toolbar" aria-label="Filtre rapide">
+              <button class="catalog-filter-chip is-active" type="button" data-filter="all" aria-pressed="true">Toate</button>
+              <button class="catalog-filter-chip" type="button" data-filter="suporti_numar" aria-pressed="false">Suporți număr</button>
+              <button class="catalog-filter-chip" type="button" data-filter="car_tuning" aria-pressed="false">Car Tuning</button>
+              <button class="catalog-filter-chip" type="button" data-filter="personalizate" aria-pressed="false">Personalizate</button>
+              <button class="catalog-filter-chip" type="button" data-filter="oferte" aria-pressed="false">Oferte</button>
+            </div>
+          </div>
+
+          <div class="catalog-filter-bar__right">
+            <label class="catalog-sort-label" for="catalog-sort">Sortează:</label>
+            <div class="catalog-sort-select-wrap">
+              <select id="catalog-sort" class="select catalog-sort-select">
+                <option value="recommended">Recomandate</option>
+                <option value="price-asc">Preț crescător</option>
+                <option value="price-desc">Preț descrescător</option>
+                <option value="newest">Cele mai noi</option>
+                <option value="popular">Cele mai vândute</option>
+              </select>
+              <span class="catalog-sort-chevron" data-icon="chevron-down"></span>
+            </div>
+
+            <div class="catalog-view-toggle" role="group" aria-label="Mod de afișare">
+              <button class="catalog-view-toggle__button is-active" type="button" data-view="grid" aria-pressed="true" aria-label="Afișare grilă">
+                <span data-icon="layout-grid"></span>
+              </button>
+              <button class="catalog-view-toggle__button" type="button" data-view="list" aria-pressed="false" aria-label="Afișare listă">
+                <span data-icon="layout-list"></span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="user-nav" id="user-nav"></div>
+    </section>
+
+    <div class="container catalog-page-container">
+      <section class="catalog-products-section" id="catalog-products" aria-labelledby="catalog-products-title">
+        <div class="catalog-products-section__header">
+          <div>
+            <div class="eyebrow eyebrow-decorated">
+              <span class="eyebrow-line" aria-hidden="true"></span>
+              <span class="eyebrow-text">PRODUSE</span>
+            </div>
+            <h2 id="catalog-products-title" class="catalog-section-title">Cele mai populare</h2>
+          </div>
+          <a class="catalog-products-section__link" href="#catalog-products-grid">Vezi toate <span data-icon="arrow-right"></span></a>
+        </div>
+
+        <div id="catalog-products-meta" class="catalog-products-meta helper-text" aria-live="polite"></div>
+        <div id="catalog-products-grid" class="catalog-products-grid" aria-live="polite"></div>
+
+        <div class="catalog-products-actions">
+          <button id="catalog-load-more" class="btn btn-primary" type="button">Încarcă mai multe</button>
+        </div>
+      </section>
     </div>
-  </header>
 
-  <main class="container categories-page">
-    <h2 class="page-title">CATALOG</h2>
-
-    <!-- Grilă cu 2 carduri statice (pui tu imaginile) -->
-    <div class="category-grid">
-      <!-- Card 1: Car Tuning -->
-      <a class="category-card" href="category.html?slug=car_tuning">
-        <img
-          src="/images/car-tuning.png"
-          alt="Car Tuning"
-          loading="lazy"
-        />
-        <div class="category-card-name">Car Tuning</div>
-      </a>
-
-      <!-- Card 2: Suporturi Număr -->
-      <a class="category-card" href="category.html?slug=suporti_numar">
-        <img
-          src="/images/suporti-numar-card.png"
-          alt="Suporturi Număr"
-          loading="lazy"
-        />
-        <div class="category-card-name">Suporturi Număr</div>
-      </a>
-    </div>
+    <section class="catalog-trust-strip" aria-labelledby="catalog-trust-title">
+      <div class="container catalog-page-container">
+        <div class="section-heading section-heading-tight">
+          <h2 id="catalog-trust-title" class="catalog-section-title">De ce aleg clienții RXP CUSTOM3D</h2>
+        </div>
+        <!-- TODO: replace stats with real values from analytics -->
+        <div class="catalog-trust-grid">
+          <article class="catalog-trust-item">
+            <span class="catalog-trust-item__icon" data-icon="package"></span>
+            <strong>1000+</strong>
+            <span>Produse livrate</span>
+          </article>
+          <article class="catalog-trust-item">
+            <span class="catalog-trust-item__icon" data-icon="star"></span>
+            <strong>4.9 / 5</strong>
+            <span>Rating mediu</span>
+          </article>
+          <article class="catalog-trust-item">
+            <span class="catalog-trust-item__icon" data-icon="truck"></span>
+            <strong>24-48h</strong>
+            <span>Livrare națională</span>
+          </article>
+          <article class="catalog-trust-item">
+            <span class="catalog-trust-item__icon" data-icon="shield-check"></span>
+            <strong>100%</strong>
+            <span>Garanție calitate</span>
+          </article>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="container footer-container">
-      <span class="footer-brand">RXPCUSTOM3D</span>
-    </div>
-  </footer>
+  <div id="site-footer"></div>
 </body>
 </html>
