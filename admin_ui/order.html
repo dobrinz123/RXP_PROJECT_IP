@@ -313,11 +313,12 @@
           'shipping.phone', 'customer.phone', 'buyer.phone', 'delivery.phone'
         ]) || '-';
 
-        const address = deepPick(o, [
+        // HIGH-A: changed const to let so the fallback re-assignment on line below doesn't throw
+        let address = deepPick(o, [
           'shipping_address', 'address', 'delivery_address',
-          'customer_address',            // <— ADĂUGAT (underscore)
+          'customer_address',
           'shipping.address', 'customer.address', 'buyer.address'
-        ]) || '-';
+        ]) || '';
 
         if (!address) {
           const parts = [

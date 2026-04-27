@@ -23,8 +23,10 @@ def list_my_orders(
     db: Session = Depends(get_db),
     user_id: int = Depends(current_user_id),
 ):
+    # MED-B: eager load items+product to avoid N+1 queries
     return (
         db.query(Order)
+        .options(joinedload(Order.items).joinedload(OrderItem.product))
         .filter(Order.user_id == user_id)
         .order_by(Order.id.desc())
         .all()

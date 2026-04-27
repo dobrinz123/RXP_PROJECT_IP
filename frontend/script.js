@@ -487,7 +487,7 @@ function hookLoginForm() {
     e.preventDefault();
     const fd = new FormData(form);
     const email = (fd.get('email') || '').trim();
-    const password = (fd.get('password') || '').trim();
+    const password = fd.get('password') || '';  // MED-E: do NOT trim password — spaces are valid
     if (!email || !password) { alert('Completează email și parolă.'); return; }
 
     try {
@@ -595,12 +595,15 @@ async function fetchOrders() {
 function statusBadge(s = '') {
   const t = String(s || '').toLowerCase();
   const map = {
+    created: 'Înregistrată',      // LOW-B: was missing
     pending: 'În așteptare',
     processing: 'În procesare',
+    in_preparation: 'În preparare',
     paid: 'Plătită',
     shipped: 'Expediată',
     delivered: 'Livrată',
-    cancelled: 'Anulată'
+    cancelled: 'Anulată',
+    canceled: 'Anulată',          // LOW-B: backend uses both spellings
   };
   return map[t] || s || '—';
 }
@@ -615,7 +618,7 @@ function renderOrdersList(list) {
   host.innerHTML = list.map(o => {
     const id = o.id ?? o.order_id ?? '—';
     const created = (o.created_at || o.created || o.date || '').toString().replace('T', ' ').replace('Z', '');
-    const totalMinor = (o.total_minor ?? o.total ?? 0);
+    const totalMinor = (o.total_amount ?? o.total_minor ?? o.total ?? 0);  // HIGH-C: API returns total_amount
     const totalText = minorToText(totalMinor, o.currency || 'RON');
     const statusText = statusBadge(o.status);
     const lines = (o.items || []).map(it => {
@@ -823,12 +826,73 @@ function setupMobileMenu() {
   });
 }
 
+// === CUSTOM REQUEST FORM (custom.html) ===
+function hookCustomForm() {
+  const form = document.querySelector('#custom-form');
+  if (!form) return;
+
+  // Redirect to login if not authenticated
+  fetchMe().then(me => {
+    if (!me) {
+      location.href = 'login.html?next=custom.html';
+    }
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      const fd = new FormData();
+      const emailEl = document.querySelector('#custom-email');
+      const descEl = document.querySelector('#custom-description');
+      const filesEl = document.querySelector('#custom-files');
+
+      if (!emailEl?.value) { alert('Completează adresa de email.'); return; }
+      fd.append('email', emailEl.value.trim());
+      if (descEl?.value) fd.append('description', descEl.value.trim());
+      if (filesEl?.files) {
+        for (const f of filesEl.files) {
+          fd.append('files', f);
+        }
+      }
+
+      const res = await fetch(API_BASE + '/custom-requests', {
+        method: 'POST',
+        body: fd,
+        credentials: 'include',
+        cache: 'no-store'
+      });
+
+      if (res.status === 401) { location.href = 'login.html?next=custom.html'; return; }
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || ('HTTP ' + res.status));
+      }
+
+      const successEl = document.querySelector('#custom-success');
+      if (successEl) {
+        successEl.textContent = 'Cererea ta a fost trimisă cu succes. Te vom contacta în curând!';
+        successEl.classList.remove('hidden');
+      }
+      form.reset();
+    } catch (err) {
+      alert('Nu am putut trimite cererea.\n' + (err.message || ''));
+      console.error(err);
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   setupMobileMenu();
   const me = await fetchMe();
   renderAuthHeader(me);
   hookLoginForm();
   hookRegisterForm();
+  hookCustomForm();  // MED-D: handle custom request form submission
   renderCategories();
   setupCategoryPage();
   setupProductPage();

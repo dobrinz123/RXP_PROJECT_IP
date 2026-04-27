@@ -19,8 +19,11 @@ def admin_list_orders(
     _admin: int = Depends(admin_required),
 ):
     """Listează comenzi pentru admin, filtrabile pe status și scope."""
+    from sqlalchemy.orm import joinedload
     DONE_STATUSES = {"delivered", "canceled", "cancelled"}
-    qry = db.query(models.Order)
+    qry = db.query(models.Order).options(
+        joinedload(models.Order.items).joinedload(models.OrderItem.product)  # MED-C: avoid N+1
+    )
 
     if scope == "done":
         qry = qry.filter(models.Order.status.in_(DONE_STATUSES))

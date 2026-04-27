@@ -36,7 +36,9 @@ def login(payload: UserLogin, response: Response, db: Session = Depends(get_db))
         max_age=7 * 24 * 3600,
         secure=True,        # CRIT-01: must be True; HTTPS enforced by nginx
     )
-    return {"ok": True}
+    # CRIT-A: also return token in body for admin UI (Bearer auth via sessionStorage)
+    # The HttpOnly cookie is used by the frontend; the token body field is used by admin_ui
+    return {"ok": True, "access_token": token}
 
 @router.post("/logout")
 def logout(response: Response):

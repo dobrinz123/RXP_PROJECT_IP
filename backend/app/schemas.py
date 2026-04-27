@@ -41,7 +41,7 @@ class ProductOut(ProductIn):
 # === Cart ===
 class CartItemIn(BaseModel):
     product_id: int
-    quantity: int
+    quantity: int = Field(ge=1)  # MED-A: prevent 0 or negative quantity (OrderItemIn already had this)
 
 class CartItemOut(BaseModel):
     id: int
@@ -67,14 +67,14 @@ class OrderOut(BaseModel):
     currency: str
     status: str
     items: List[OrderItemOut]
-    # opÈ›ionale / pot fi None Ã®n DB dacÄƒ nu le-ai adÄƒugat Ã®ncÄƒ
+    # optionale / pot fi None in DB
     shipping_fee_minor: Optional[int] = None
     customer_name: Optional[str] = None
     customer_phone: Optional[str] = None
     customer_address: Optional[str] = None
-
     stripe_payment_intent: Optional[str] = None
     invoice_no: Optional[str] = None
+    created_at: Optional[datetime] = None   # HIGH-B: was missing, frontend needs it for order date display
     class Config:
         from_attributes = True
 
