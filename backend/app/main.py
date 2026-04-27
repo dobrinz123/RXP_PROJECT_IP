@@ -1,18 +1,18 @@
 # app/main.py
 import os
-from fastapi import FastAPI
+import time
+import logging
+from pathlib import Path
+from fastapi import FastAPI, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 
 from .database import engine, Base
 from .routers import auth, products, cart, orders, payments, custom_requests, admin_panel
 
-# BUG-19: retry logic pentru conectarea la DB (PostgreSQL poate sa nu fie gata imediat in Docker)
-import time
-import logging
-from fastapi import Request
-from fastapi.responses import JSONResponse
-
 _logger = logging.getLogger(__name__)
+
 
 def _init_db(retries: int = 5, delay: float = 3.0):
     for attempt in range(1, retries + 1):
@@ -27,12 +27,27 @@ def _init_db(retries: int = 5, delay: float = 3.0):
             else:
                 raise RuntimeError(f"Nu am putut conecta la DB dupa {retries} incercari") from exc
 
+
 _init_db()
 
-# MED-04: debug=False ensures stack traces are never sent to clients in production
-app = FastAPI(title="Shop API", root_path="/api", debug=False)
+# Deployment mode:
+#   Local docker (with nginx): API_PREFIX="" (default), SERVE_STATIC=false
+#     -> nginx strips /api before proxying; FastAPI routes are at /auth/login etc.
+#     -> root_path="/api" makes Swagger generate /api/* URLs
+#   Render single-container (no nginx): API_PREFIX="/api", SERVE_STATIC=true
+#     -> FastAPI handles /api/* directly and serves frontend + admin_ui static files
+API_PREFIX = os.getenv("API_PREFIX", "")
+SERVE_STATIC = os.getenv("SERVE_STATIC", "false").lower() == "true"
 
-# CORS — citit din env CORS_ORIGINS (comma-separated) sau fallback la localhost + domeniu propriu
+app = FastAPI(
+    title="Shop API",
+    root_path="/api" if not API_PREFIX else "",
+    docs_url=f"{API_PREFIX}/docs" if API_PREFIX else "/docs",
+    openapi_url=f"{API_PREFIX}/openapi.json" if API_PREFIX else "/openapi.json",
+    redoc_url=f"{API_PREFIX}/redoc" if API_PREFIX else "/redoc",
+    debug=False,
+)
+
 _default_origins = (
     "http://localhost:8080,http://localhost:8081,"
     "http://127.0.0.1:8080,http://127.0.0.1:8081,"
@@ -49,22 +64,46 @@ app.add_middleware(
     allow_credentials=True,
 )
 
-# include routers
-app.include_router(auth.router)
-app.include_router(products.router)
-app.include_router(cart.router)
-app.include_router(orders.router)
-app.include_router(payments.router)
-app.include_router(custom_requests.router)
-app.include_router(admin_panel.router, prefix="/admin", tags=["admin"])
+# Build API routes under optional prefix (/api in cloud, "" locally)
+api_router = APIRouter(prefix=API_PREFIX)
+api_router.include_router(auth.router)
+api_router.include_router(products.router)
+api_router.include_router(cart.router)
+api_router.include_router(orders.router)
+api_router.include_router(payments.router)
+api_router.include_router(custom_requests.router)
+api_router.include_router(admin_panel.router, prefix="/admin", tags=["admin"])
+
+
+@api_router.get("/health")
+def health():
+    return {"ok": True}
+
+
+app.include_router(api_router)
 
 
 @app.exception_handler(Exception)
 async def generic_500_handler(request: Request, exc: Exception):
-    # MED-04: log full details server-side, return generic message to client
     _logger.error("Unhandled exception on %s %s: %s", request.method, request.url.path, exc, exc_info=True)
     return JSONResponse(status_code=500, content={"detail": "Eroare internă de server."})
 
-@app.get("/")
-def root():
-    return {"ok": True}
+
+# Serve static files when running as single-container (Render). Mounted LAST
+# so explicit API routes win.
+if SERVE_STATIC:
+    APP_ROOT = Path(os.getenv("APP_ROOT", "/app"))
+    admin_dir = APP_ROOT / "admin_ui"
+    frontend_dir = APP_ROOT / "frontend"
+
+    if admin_dir.exists():
+        app.mount("/admin", StaticFiles(directory=str(admin_dir), html=True), name="admin")
+        _logger.info("Mounted admin_ui at /admin from %s", admin_dir)
+    else:
+        _logger.warning("admin_ui directory not found at %s", admin_dir)
+
+    if frontend_dir.exists():
+        app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
+        _logger.info("Mounted frontend at / from %s", frontend_dir)
+    else:
+        _logger.warning("frontend directory not found at %s", frontend_dir)
