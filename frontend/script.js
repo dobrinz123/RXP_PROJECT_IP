@@ -219,12 +219,7 @@ async function setupProductPage() {
         alert('Produs adăugat în coș');
       } catch (e) {
         if (String(e.message).includes('NEAUTENTIFICAT')) {
-          showLoginModal(async () => {
-            await cartAdd(p.id, qty);
-            const cart = await cartGet();
-            setCartCounterFromItems(cart.items || cart || []);
-            alert('Produs adăugat în coș');
-          });
+          location.href = 'login.html';
         } else {
           alert('Nu am putut adăuga în coș');
           console.error(e);
@@ -429,7 +424,7 @@ async function renderCartPageServer() {
     }
   } catch (e) {
     if (e.status === 401 || String(e.message).includes('NEAUTENTIFICAT')) {
-      showLoginModal(() => location.reload());
+      location.href = 'login.html';
       return;
     }
     console.error(e);
@@ -524,11 +519,8 @@ function hookRegisterForm() {
       let res = await registerJSON(email, pass1, name);
       if (!res.ok && (res.status === 415 || res.status === 422)) res = await registerForm(email, pass1, name);
       if (!res.ok) throw new Error((await res.text()) || ('HTTP ' + res.status));
-      let loginRes = await loginJSON(email, pass1);
-      if (!loginRes.ok && (loginRes.status === 415 || loginRes.status === 422)) loginRes = await loginForm(email, pass1, '');
-      if (loginRes.ok) { location.href = 'index.html'; return; }
       alert('Cont creat. Te poți autentifica.');
-      showLoginModal(() => { location.href = 'index.html'; });
+      location.href = 'login.html';
     } catch (err) {
       alert('Înregistrare eșuată.\n' + err.message);
       console.error(err);
@@ -566,64 +558,6 @@ function renderAuthHeader(user) {
   } else {
     box.innerHTML = `<a href="login.html">Login</a>`;
   }
-}
-
-function showLoginModal(afterLogin) {
-  let overlay = document.getElementById('rxp-login-modal');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'rxp-login-modal';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(3px)';
-    overlay.innerHTML = `
-      <div style="background:#fff;border-radius:16px;padding:36px 32px;width:360px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.35)">
-        <h2 style="margin:0 0 6px;font-size:20px;text-align:center">Autentificare</h2>
-        <p style="margin:0 0 20px;color:#666;font-size:14px;text-align:center">Trebuie să fii autentificat pentru a continua</p>
-        <form id="rxp-modal-form">
-          <input id="rxp-modal-email" type="email" placeholder="Email" required autocomplete="email"
-            style="display:block;width:100%;padding:10px 12px;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;font-size:15px;box-sizing:border-box">
-          <input id="rxp-modal-pass" type="password" placeholder="Parolă" required autocomplete="current-password"
-            style="display:block;width:100%;padding:10px 12px;margin-bottom:14px;border:1px solid #ddd;border-radius:8px;font-size:15px;box-sizing:border-box">
-          <button type="submit" id="rxp-modal-btn"
-            style="width:100%;padding:11px;background:#111;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">
-            Intră în cont
-          </button>
-        </form>
-        <div id="rxp-modal-err" style="color:#dc2626;font-size:13px;margin-top:10px;text-align:center;min-height:18px"></div>
-        <div style="margin-top:14px;font-size:13px;color:#555;text-align:center">
-          Nu ai cont? <a href="register.html" style="color:#111;font-weight:600">Înregistrează-te</a>
-        </div>
-        <div style="text-align:center;margin-top:10px">
-          <button id="rxp-modal-close" type="button"
-            style="background:none;border:none;color:#999;font-size:13px;cursor:pointer">Anulează</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-    document.getElementById('rxp-modal-close').onclick = () => overlay.remove();
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-    document.getElementById('rxp-modal-form').addEventListener('submit', async e => {
-      e.preventDefault();
-      const email = document.getElementById('rxp-modal-email').value.trim();
-      const pass = document.getElementById('rxp-modal-pass').value;
-      const errEl = document.getElementById('rxp-modal-err');
-      const btn = document.getElementById('rxp-modal-btn');
-      btn.disabled = true; btn.textContent = 'Se autentifică...'; errEl.textContent = '';
-      try {
-        let res = await loginJSON(email, pass);
-        if (!res.ok && (res.status === 415 || res.status === 422)) res = await loginForm(email, pass);
-        if (!res.ok) { errEl.textContent = 'Email sau parolă greșite.'; return; }
-        overlay.remove();
-        const me = await fetchMe();
-        renderAuthHeader(me);
-        if (typeof afterLogin === 'function') afterLogin();
-      } catch (_) {
-        errEl.textContent = 'Eroare de conexiune.';
-      } finally {
-        btn.disabled = false; btn.textContent = 'Intră în cont';
-      }
-    });
-  }
-  document.getElementById('rxp-modal-email')?.focus();
 }
 
 async function changePassword(current_password, new_password) {
@@ -897,8 +831,11 @@ function hookCustomForm() {
   const form = document.querySelector('#custom-form');
   if (!form) return;
 
+  // Redirect to login if not authenticated
   fetchMe().then(me => {
-    if (!me) showLoginModal(() => location.reload());
+    if (!me) {
+      location.href = 'login.html?next=custom.html';
+    }
   });
 
   form.addEventListener('submit', async (e) => {
@@ -928,7 +865,7 @@ function hookCustomForm() {
         cache: 'no-store'
       });
 
-      if (res.status === 401) { showLoginModal(() => location.reload()); return; }
+      if (res.status === 401) { location.href = 'login.html?next=custom.html'; return; }
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.detail || ('HTTP ' + res.status));
