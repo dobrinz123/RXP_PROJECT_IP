@@ -1,0 +1,231 @@
+:root {
+  --b: #111;
+  --g: #f6f6f6;
+  --p: #2563eb
+}
+
+* {
+  box-sizing: border-box
+}
+
+body {
+  font-family: system-ui, Segoe UI, Roboto, Arial;
+  margin: 0;
+  background: #fff;
+  color: #222
+}
+
+/* ─── AUTH BLOCKER ─── */
+#auth-blocker {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #3b82f6 100%);
+}
+
+#auth-blocker .login-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px 36px;
+  width: 380px;
+  max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+  text-align: center;
+}
+
+#auth-blocker .login-card h1 {
+  font-size: 24px;
+  margin: 0 0 6px;
+  color: #1e3a5f;
+}
+
+#auth-blocker .login-card .subtitle {
+  color: #666;
+  margin: 0 0 24px;
+  font-size: 14px;
+}
+
+#auth-blocker .login-card input {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color .2s;
+}
+
+#auth-blocker .login-card input:focus {
+  border-color: var(--p);
+}
+
+#auth-blocker .login-card button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: var(--p);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+#auth-blocker .login-card button:hover {
+  background: #1d4ed8;
+}
+
+#auth-blocker .login-card button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+#auth-blocker .login-error {
+  color: #dc2626;
+  font-size: 13px;
+  margin-top: 10px;
+  min-height: 20px;
+}
+
+.lock-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+/* ─── ADMIN CONTENT (hidden until auth) ─── */
+#admin-content {
+  display: none;
+}
+
+#admin-content.unlocked {
+  display: block;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #eee;
+  background: #fafafa;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+header h1 {
+  font-size: 18px;
+  margin: 0
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-user .user-email {
+  font-size: 13px;
+  color: #666;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+
+.header-user button {
+  padding: 6px 14px;
+  font-size: 13px;
+  background: #dc2626;
+  border-radius: 8px;
+}
+
+.header-user button:hover {
+  background: #b91c1c;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap
+}
+
+input,
+button,
+select,
+textarea {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 8px
+}
+
+button {
+  background: var(--p);
+  color: #fff;
+  border: none;
+  cursor: pointer
+}
+
+button:disabled {
+  opacity: .6;
+  cursor: not-allowed
+}
+
+main {
+  max-width: 1100px;
+  margin: 18px auto;
+  padding: 0 16px
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 12px
+}
+
+.tab {
+  padding: 10px 14px;
+  cursor: pointer
+}
+
+.tab.active {
+  border-bottom: 2px solid var(--p);
+  font-weight: 600
+}
+
+.card {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%
+}
+
+th,
+td {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 8px;
+  text-align: left
+}
+
+tr:hover {
+  background: #fafafa
+}
+
+.badge {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #eef
+}
+
+small.mono {
+  font-family: ui-monospace, Menlo, Consolas, monospace
+}
