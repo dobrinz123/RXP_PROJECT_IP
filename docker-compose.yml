@@ -1,9 +1,19 @@
 services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.docker
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
   api:
     build: ./backend
     restart: unless-stopped
     env_file:
       - ./backend/.env.docker
+    depends_on:
+      - db
     expose:
       - "8000"
     volumes:
@@ -24,3 +34,6 @@ services:
       - ./nginx/certbot:/var/www/certbot:ro  # SEC-04: Let's Encrypt webroot challenge
     depends_on:
       - api
+
+volumes:
+  pgdata:
