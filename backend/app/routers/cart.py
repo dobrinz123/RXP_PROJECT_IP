@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from ..models import CartItem, Product
 from ..schemas import CartItemIn, CartItemOut, CartQtyUpdate
-from ..deps import current_user_id, get_db  # BUG-27: import get_db din deps
+from ..deps import current_user_id, get_db
 
 router = APIRouter(prefix="/cart", tags=["cart"])
 
@@ -19,7 +19,6 @@ def add_to_cart(payload: CartItemIn, db: Session = Depends(get_db), user_id: int
         raise HTTPException(status_code=400, detail="Produs indisponibil")
     item = db.query(CartItem).filter(CartItem.user_id == user_id, CartItem.product_id == payload.product_id).first()
     if item:
-        # BUG-11: verifica stoc total inainte de a merge cantitatea
         new_qty = item.quantity + payload.quantity
         if product.stock < new_qty:
             raise HTTPException(status_code=400, detail=f"Stoc insuficient. Disponibil: {product.stock}")
@@ -39,7 +38,6 @@ def update_quantity(item_id: int, payload: CartQtyUpdate, db: Session = Depends(
     if payload.quantity <= 0:
         db.delete(item)
         db.commit()
-        # BUG-02: Return 204 No Content (nu un dict incompatibil cu response_model)
         return Response(status_code=204)
     if item.product.stock < payload.quantity:
         raise HTTPException(status_code=400, detail="Stoc insuficient")

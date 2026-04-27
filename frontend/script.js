@@ -154,7 +154,8 @@ async function setupCategoryPage() {
     filterWrap.innerHTML = '';
     const label = document.createElement('label'); label.textContent = 'Marcă: '; label.style.marginRight = '8px';
     const select = document.createElement('select');
-    select.innerHTML = `<option value="">(toate)</option>` + allTags.map(t => `<option ${t === currentTag ? 'selected' : ''} value="${t}">${t}</option>`).join('');
+    // MED-03: escapeHtml on tag values (admin-set, but defence in depth)
+    select.innerHTML = `<option value="">(toate)</option>` + allTags.map(t => `<option ${t === currentTag ? 'selected' : ''} value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
     select.onchange = async () => {
       const tag = select.value || '';
       const url = `/products?category=${encodeURIComponent(slug)}${tag ? `&tag=${encodeURIComponent(tag)}` : ''}`;
@@ -229,7 +230,8 @@ async function setupProductPage() {
 
   // carusel + swipe
   const track = qs('#carTrack'), dots = qs('#carDots'), prev = qs('#carPrev'), next = qs('#carNext');
-  track.innerHTML = imgs.map(src => `<div class="slide"><img src="${src}" alt=""></div>`).join('');
+  // CRIT-04: escapeHtml prevents stored XSS via malicious image_url in product data
+  track.innerHTML = imgs.map(src => `<div class="slide"><img src="${escapeHtml(src)}" alt=""></div>`).join('');
   dots.innerHTML = imgs.map((_, i) => `<button class="dot" data-i="${i}" ${i === 0 ? 'aria-current="true"' : ''}></button>`).join('');
   let i = 0, n = imgs.length, w = () => track.clientWidth;
   function go(k) { i = Math.max(0, Math.min(n - 1, k)); track.style.transform = `translateX(${-i * w()}px)`; prev.disabled = i === 0; next.disabled = i === n - 1;[...dots.children].forEach((d, di) => d.toggleAttribute('aria-current', di === i)); }
@@ -307,7 +309,7 @@ async function renderCartPageServer() {
 
       return `
         <div class="cart-item" data-id="${it.id}">
-          <img src="${img}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px">
+          <img src="${escapeHtml(img)}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px">
           <div class="cart-item-name">${escapeHtml(name)}</div>
 
           <div class="cart-item-controls">
@@ -437,7 +439,6 @@ async function renderCartPageServer() {
 
 
 // === AUTH v5 (JSON cu fallback la form) ===
-console.log('auth hooks v5 loaded');
 
 async function loginJSON(email, password) {
   return fetch(API_BASE + '/auth/login', {
@@ -782,7 +783,48 @@ function minorToText(v, curr = 'RON') {
   return (n / 100).toFixed(2).replace('.', ',') + ' ' + curr.toUpperCase();
 }
 
+// === MOBILE MENU ===
+function setupMobileMenu() {
+  const toggle = document.querySelector('.mobile-menu-toggle');
+  const nav = document.querySelector('.main-nav');
+  if (!toggle || !nav) return;
+
+  toggle.setAttribute('aria-expanded', 'false');
+
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  // Event delegation — catches links injected dynamically by renderAuthHeader
+  nav.addEventListener('click', (e) => {
+    if (e.target.closest('a')) {
+      nav.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // Escape key closes menu and returns focus to toggle
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && nav.classList.contains('open')) {
+      nav.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.focus();
+    }
+  });
+
+  // Outside click closes menu
+  document.addEventListener('click', (e) => {
+    if (!toggle.contains(e.target) && !nav.contains(e.target)) {
+      nav.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+  setupMobileMenu();
   const me = await fetchMe();
   renderAuthHeader(me);
   hookLoginForm();

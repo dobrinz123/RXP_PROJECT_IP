@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from ..models import CartItem, Order, OrderItem, Product
 from ..schemas import PaymentIntentCreate
-from ..deps import current_user_id, get_db  # BUG-27: import get_db din deps (nu redefinit local)
+from ..deps import current_user_id, get_db
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -32,7 +32,6 @@ def create_payment_intent(payload: PaymentIntentCreate, db: Session = Depends(ge
         raise HTTPException(status_code=400, detail="Stripe neconfigurat")
     amount = compute_amount(db, user_id)
     intent = stripe.PaymentIntent.create(amount=amount, currency=CURRENCY, automatic_payment_methods={"enabled": True})
-    # BUG-14: intotdeauna salveaza comanda (nu optional) ca webhook sa o gaseasca
     order = Order(user_id=user_id, total_amount=amount, currency=CURRENCY, status="pending", stripe_payment_intent=intent["id"])
     db.add(order)
     db.commit()
@@ -57,7 +56,6 @@ async def webhook(request: Request, db: Session = Depends(get_db)):
 
     if event["type"] == "payment_intent.succeeded":
         pi = event["data"]["object"]
-        # BUG-13: foloseste with_for_update() pentru a preveni race condition (webhook retrimis)
         order = db.query(Order).filter(Order.stripe_payment_intent == pi["id"]).with_for_update().first()
         if order and order.status != "paid":
             items = db.query(CartItem).filter(CartItem.user_id == order.user_id).all()
@@ -65,7 +63,6 @@ async def webhook(request: Request, db: Session = Depends(get_db)):
                 # Lock produsul pentru a preveni race conditions
                 product = db.query(Product).filter(Product.id == ci.product_id).with_for_update().first()
 
-                # BUG-04: verifica stoc inainte de decrement (evita stoc negativ)
                 if product:
                     if product.stock < ci.quantity:
                         logger.error(
@@ -78,7 +75,6 @@ async def webhook(request: Request, db: Session = Depends(get_db)):
                     else:
                         product.stock -= ci.quantity
 
-                # BUG-05: protejeaza impotriva product=None (produs sters intre timp)
                 unit_price = None
                 if product:
                     unit_price = product.price

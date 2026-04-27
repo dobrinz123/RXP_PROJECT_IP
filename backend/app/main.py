@@ -9,6 +9,8 @@ from .routers import auth, products, cart, orders, payments, custom_requests, ad
 # BUG-19: retry logic pentru conectarea la DB (PostgreSQL poate sa nu fie gata imediat in Docker)
 import time
 import logging
+from fastapi import Request
+from fastapi.responses import JSONResponse
 
 _logger = logging.getLogger(__name__)
 
@@ -27,8 +29,8 @@ def _init_db(retries: int = 5, delay: float = 3.0):
 
 _init_db()
 
-# daca il rulezi sub proxy /api:
-app = FastAPI(title="Shop API", root_path="/api")
+# MED-04: debug=False ensures stack traces are never sent to clients in production
+app = FastAPI(title="Shop API", root_path="/api", debug=False)
 
 # CORS — citit din env CORS_ORIGINS (comma-separated) sau fallback la localhost + domeniu propriu
 _default_origins = (
@@ -56,6 +58,12 @@ app.include_router(payments.router)
 app.include_router(custom_requests.router)
 app.include_router(admin_panel.router, prefix="/admin", tags=["admin"])
 
+
+@app.exception_handler(Exception)
+async def generic_500_handler(request: Request, exc: Exception):
+    # MED-04: log full details server-side, return generic message to client
+    _logger.error("Unhandled exception on %s %s: %s", request.method, request.url.path, exc, exc_info=True)
+    return JSONResponse(status_code=500, content={"detail": "Eroare internă de server."})
 
 @app.get("/")
 def root():

@@ -18,3 +18,5 @@ __pycache__/
 *.pyo
 invoices/
 uploads/
+
+.claude/

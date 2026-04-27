@@ -24,7 +24,11 @@ if not JWT_SECRET or JWT_SECRET in _PLACEHOLDER_SECRETS:
         RuntimeWarning, stacklevel=1
     )
 
-JWT_ALG = os.getenv("JWT_ALG", "HS256")
+# MED-02: algorithm hardcoded — never read from env (prevents 'none' algorithm attack)
+JWT_ALG = "HS256"
+
+# HIGH-02: expiry read from env so .env.docker and code stay consistent
+_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "2880"))  # default 2 days
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
@@ -33,8 +37,7 @@ def verify_password(password: str, hashed: str) -> bool:
     return pwd_context.verify(password, hashed)
 
 def create_token(user_id: int) -> str:
-    # BUG-24: datetime.utcnow() deprecat in Python 3.12+, inlocuit cu timezone-aware
-    payload = {"sub": str(user_id), "exp": datetime.now(timezone.utc) + timedelta(days=7)}
+    payload = {"sub": str(user_id), "exp": datetime.now(timezone.utc) + timedelta(minutes=_EXPIRE_MINUTES)}
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALG)
 
 def decode_token(token: str) -> int:

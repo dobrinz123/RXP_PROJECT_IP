@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from ..models import User
 from ..schemas import UserCreate, UserLogin, UserOut
 from ..security import hash_password, verify_password, create_token
-from ..deps import current_user_id, get_db  # BUG-27: import get_db din deps, nu redefinit local
+from ..deps import current_user_id, get_db
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -31,16 +31,17 @@ def login(payload: UserLogin, response: Response, db: Session = Depends(get_db))
         key="auth_token",
         value=token,
         httponly=True,
-        samesite="lax",
-        max_age=7 * 24 * 3600,   # 7 zile — trebuie sa corespunda cu timedelta din create_token()
-        secure=False,   # schimba la True dupa activarea HTTPS (SEC-04)
+        samesite="strict",  # LOW-01: Strict > Lax for same-origin app
+        path="/api",        # LOW-02: restrict cookie to API paths only
+        max_age=7 * 24 * 3600,
+        secure=True,        # CRIT-01: must be True; HTTPS enforced by nginx
     )
     return {"ok": True}
 
 @router.post("/logout")
 def logout(response: Response):
-    # SEC-01: stergem cookie-ul la logout
-    response.delete_cookie(key="auth_token", httponly=True, samesite="lax")
+    # SEC-01: stergem cookie-ul la logout (aceleasi atribute ca la set)
+    response.delete_cookie(key="auth_token", httponly=True, samesite="strict", path="/api", secure=True)
     return {"ok": True}
 
 @router.get("/me", response_model=UserOut)
@@ -69,8 +70,8 @@ def change_password(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User inexistent")
     if not verify_password(payload.current_password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Parola curenta incorecta")
-    if len(payload.new_password) < 6:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Parola noua prea scurta (min 6 caractere)")
+    if len(payload.new_password) < 8:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Parola noua prea scurta (min 8 caractere)")
     user.password_hash = hash_password(payload.new_password)
     db.commit()
     return {"ok": True, "detail": "Parola schimbata cu succes"}

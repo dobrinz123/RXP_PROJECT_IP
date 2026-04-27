@@ -2,7 +2,8 @@
 export const API_BASE = '/api'; // Nginx proxiază către FastAPI
 
 export async function apiGet(path){
-  const r = await fetch(API_BASE + path);
+  // LOW-05: credentials: 'include' ensures the HttpOnly auth cookie is sent
+  const r = await fetch(API_BASE + path, { credentials: 'include', cache: 'no-store' });
   if(!r.ok) throw new Error('HTTP '+r.status);
   return await r.json();
 }

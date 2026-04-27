@@ -7,7 +7,7 @@ from datetime import datetime
 # === Auth ===
 class UserCreate(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(..., min_length=8)  # HIGH-04: min 8 chars enforced at registration
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -128,15 +128,11 @@ class OrderItemIn(BaseModel):
     quantity: int = Field(ge=1)
 
 class OrderCreateCOD(BaseModel):
-    full_name: str = Field(..., min_length=2)
-    phone: str = Field(..., min_length=3)
-    address: str = Field(..., min_length=3)
-    # BUG-07: ge=0 previne shipping negativ; le=50000 = max 500 RON transport
-    shipping_fee_minor: int = Field(
-        default_factory=lambda: int(os.getenv("CASH_ON_DELIVERY_FEE_MINOR", "2500")),
-        ge=0,
-        le=50000
-    )
+    # MED-07: max_length matches DB column sizes
+    full_name: str = Field(..., min_length=2, max_length=200)
+    phone: str = Field(..., min_length=3, max_length=50)
+    address: str = Field(..., min_length=3, max_length=500)
+    # CRIT-02: shipping_fee_minor removed — shipping is always computed server-side
     items: Optional[List[OrderItemIn]] = None  # ignorat de backend; pastrat pt. compat
 
 class AdminOrderItemOut(BaseModel):

@@ -23,7 +23,6 @@ def list_my_orders(
     db: Session = Depends(get_db),
     user_id: int = Depends(current_user_id),
 ):
-    """Returneaza toate comenzile utilizatorului curent."""
     return (
         db.query(Order)
         .filter(Order.user_id == user_id)
@@ -38,15 +37,12 @@ def checkout_cod(
     db: Session = Depends(get_db),
     user_id: int = Depends(current_user_id),
 ):
-    """Plaseaza o comanda ramburs (Cash on Delivery) pe baza cosului server-side."""
     cart_items = db.query(CartItem).filter(CartItem.user_id == user_id).all()
     if not cart_items:
         raise HTTPException(status_code=400, detail="Cosul este gol.")
 
-    # BUG-07: valideaza shipping_fee_minor din payload (schema are ge=0, le=50000)
-    # Conditia "if payload.shipping_fee_minor" era bug: -5000 era truthy!
-    # Acum schema forteaza ge=0, deci orice valoare trimisa e >= 0.
-    shipping = payload.shipping_fee_minor if payload.shipping_fee_minor is not None else SHIPPING_FEE
+    # CRIT-02: shipping always computed server-side, never trusted from client
+    shipping = SHIPPING_FEE
 
     products_total = 0
     order_items: list[OrderItem] = []
@@ -80,12 +76,10 @@ def checkout_cod(
         customer_name=payload.full_name,
         customer_phone=payload.phone,
         customer_address=payload.address,
-        # BUG-06: invoice_no generat DUPA flush() pentru a folosi order.id real (atomic, unic)
     )
     db.add(order)
-    db.flush()  # obtine order.id din DB
+    db.flush()
 
-    # BUG-06: foloseste order.id (unic, generat de DB) pentru invoice_no atomic
     year = datetime.now(timezone.utc).year
     order.invoice_no = f"RXP-{year}-{order.id:06d}"
 
@@ -95,7 +89,6 @@ def checkout_cod(
 
     db.commit()
 
-    # BUG-21: eager load relatiile inainte de generarea PDF (evita DetachedInstanceError)
     order = (
         db.query(Order)
         .options(joinedload(Order.items).joinedload(OrderItem.product))

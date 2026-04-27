@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from ..models import Product
 from ..schemas import ProductIn, ProductOut
-from ..deps import admin_required, get_db  # BUG-27: import get_db din deps
+from ..deps import admin_required, get_db, optional_admin  # BUG-27: import get_db din deps
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -17,9 +17,11 @@ def list_products(
     category: Optional[str] = Query(None, description="ex: car_tuning sau suporti_numar"),
     tag: Optional[str] = Query(None, description="ex: mercedes"),
     db: Session = Depends(get_db),
+    is_admin: bool = Depends(optional_admin),
 ):
     qry = db.query(Product)
-    if not include_inactive:
+    # CRIT-03: include_inactive is only honoured for authenticated admins
+    if not (include_inactive and is_admin):
         qry = qry.filter(Product.is_active == True)
     if category:
         qry = qry.filter(Product.category == category)

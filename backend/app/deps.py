@@ -35,3 +35,21 @@ def admin_required(user_id: int = Depends(current_user_id), db: Session = Depend
     if not user or not user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Necesită admin")
     return user_id
+
+def optional_admin(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(auth_scheme),
+    db: Session = Depends(get_db),
+) -> bool:
+    """Returns True if caller is an authenticated admin, False otherwise. Never raises."""
+    try:
+        token = request.cookies.get("auth_token")
+        if not token and credentials:
+            token = credentials.credentials
+        if not token:
+            return False
+        user_id = decode_token(token)
+        user = db.get(User, user_id)
+        return bool(user and user.is_admin)
+    except Exception:
+        return False

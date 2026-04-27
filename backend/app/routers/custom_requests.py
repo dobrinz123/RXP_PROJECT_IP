@@ -30,11 +30,9 @@ async def create_custom_request(
     files: Optional[List[UploadFile]] = File(None),
     user_id: int = Depends(current_user_id),
 ):
-    # BUG-09: verifica numarul de fisiere INAINTE de a le citi
     if files and len(files) > MAX_FILES:
         raise HTTPException(status_code=400, detail=f"Maxim {MAX_FILES} fisiere permise per cerere")
 
-    # BUG-26: req_id cu entropia completa a UUID (hex = 32 chars, 2^128 combinatii)
     req_id = uuid.uuid4().hex
 
     saved_paths = []
@@ -58,8 +56,6 @@ async def create_custom_request(
 
                 name = f"{uuid.uuid4().hex[:8]}_{safe_name}"
                 path = os.path.join(folder, name)
-
-                # BUG-09: citeste in chunks si verifica dimensiunea inainte de scriere pe disk
                 content = b""
                 async for chunk in uf:
                     content += chunk
@@ -74,7 +70,6 @@ async def create_custom_request(
                 saved_paths.append(path)
 
         except HTTPException:
-            # NEW-06: sterge folderul si fisierele partial salvate pentru a evita orfane pe disk
             import shutil
             shutil.rmtree(folder, ignore_errors=True)
             raise

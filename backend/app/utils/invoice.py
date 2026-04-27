@@ -1,5 +1,5 @@
-"""Invoice PDF generator using ReportLab with Unicode (DejaVuSans) font support."""
 import os
+import html as _html
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -45,7 +45,7 @@ def _fmt(minor: int, currency: str = "RON") -> str:
 
 
 def _style(name, font=None, size=9, color=None, align=None):
-    """Create a ParagraphStyle directly (no inheritance to avoid fontName conflicts)."""
+
     kwargs = dict(
         fontName=font or FONT,
         fontSize=size,
@@ -61,11 +61,7 @@ def _style(name, font=None, size=9, color=None, align=None):
 
 
 def generate_invoice_pdf(order, company=None) -> str:
-    """
-    Generate a PDF invoice for the given order.
-    `company` is an optional CompanySettings ORM object (or None / dict).
-    Returns the file path.
-    """
+
     os.makedirs(INVOICE_DIR, exist_ok=True)
     # BUG-29: sanitizeaza invoice_no pentru a preveni path traversal
     import re as _re
@@ -104,23 +100,23 @@ def generate_invoice_pdf(order, company=None) -> str:
     if co("name"):
         company_lines.append(Paragraph(f"Denumire: {co('name')}", normal))
     else:
-        company_lines.append(Paragraph("Denumire: ___________________________", normal))
+        company_lines.append(Paragraph("Denumire: ", normal))
     if co("cif"):
         company_lines.append(Paragraph(f"CIF: {co('cif')}", normal))
     else:
-        company_lines.append(Paragraph("CIF: ___________________________", normal))
+        company_lines.append(Paragraph("CIF: ", normal))
     if co("reg_com"):
         company_lines.append(Paragraph(f"Reg. Com.: {co('reg_com')}", normal))
     else:
-        company_lines.append(Paragraph("Reg. Com.: ___________________________", normal))
+        company_lines.append(Paragraph("Reg. Com.: ", normal))
     if co("address"):
         company_lines.append(Paragraph(f"Adres\u0103: {co('address')}", normal))
     else:
-        company_lines.append(Paragraph("Adres\u0103: ___________________________", normal))
+        company_lines.append(Paragraph("Adres\u0103: ", normal))
     if co("bank_account"):
         company_lines.append(Paragraph(f"IBAN: {co('bank_account')}", normal))
     else:
-        company_lines.append(Paragraph("IBAN: ___________________________", normal))
+        company_lines.append(Paragraph("IBAN: ", normal))
 
     created_str = ""
     if order.created_at:
@@ -152,9 +148,10 @@ def generate_invoice_pdf(order, company=None) -> str:
     # ── Client info ──
     story.append(Paragraph("Client &amp; Livrare", bold))
     story.append(Spacer(1, 0.15*cm))
-    story.append(Paragraph(f"Nume: {order.customer_name or '-'}", normal))
-    story.append(Paragraph(f"Telefon: {order.customer_phone or '-'}", normal))
-    story.append(Paragraph(f"Adres\u0103: {order.customer_address or '-'}", normal))
+    # HIGH-07: escape customer-supplied strings to prevent ReportLab XML/PDF injection
+    story.append(Paragraph(f"Nume: {_html.escape(order.customer_name or '-')}", normal))
+    story.append(Paragraph(f"Telefon: {_html.escape(order.customer_phone or '-')}", normal))
+    story.append(Paragraph(f"Adres\u0103: {_html.escape(order.customer_address or '-')}", normal))
     story.append(Spacer(1, 0.5*cm))
 
     # ── Products table (with TVA 21% breakdown) ──
@@ -201,12 +198,12 @@ def generate_invoice_pdf(order, company=None) -> str:
         total_incl += line_incl
 
         prod_rows.append([
-            Paragraph(str(idx),                     normal),
-            Paragraph(name,                          normal),
-            Paragraph(str(qty),                      normal),
-            Paragraph(_fmt(unit_excl, currency),     normal),
-            Paragraph(_fmt(unit_tva,  currency),     normal),
-            Paragraph(_fmt(line_incl, currency),     normal),
+            Paragraph(str(idx), normal),
+            Paragraph(name, normal),
+            Paragraph(str(qty), normal),
+            Paragraph(_fmt(unit_excl, currency), normal),
+            Paragraph(_fmt(unit_tva,  currency), normal),
+            Paragraph(_fmt(line_incl, currency), normal),
         ])
 
     prod_tbl = Table(
