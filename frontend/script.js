@@ -829,7 +829,9 @@ async function renderCatalogLandingPage() {
       personalizate: 'Personalizate',
       oferte: 'Oferte'
     })[state.selectedFilter] || 'Toate';
-    metaNode.textContent = `Afișezi ${shownCount} din ${state.filteredProducts.length} ${state.filteredProducts.length === 1 ? 'produs' : 'produse'} · Filtru: ${filterLabel}`;
+    metaNode.textContent = filterButtons.length
+      ? `Afișezi ${shownCount} din ${state.filteredProducts.length} ${state.filteredProducts.length === 1 ? 'produs' : 'produse'} · Filtru: ${filterLabel}`
+      : `Afișezi ${shownCount} din ${state.filteredProducts.length} ${state.filteredProducts.length === 1 ? 'produs' : 'produse'}`;
   }
 
   function applyState() {
@@ -1142,15 +1144,23 @@ async function renderCartPage() {
               <div class="cart-item-meta">
                 <h3>${escapeHtml(product.name || 'Produs')}</h3>
                 <p>${escapeHtml(product.category || 'Produs standard')}</p>
-                <div class="cart-item-price"><span class="helper-text">Preț / bucată</span><strong>${formatMoney(unitPrice, product.currency)}</strong></div>
               </div>
               <div class="qty-stepper" aria-label="Cantitate">
                 <button type="button" data-cart-action="decrease">−</button>
                 <span>${quantity}</span>
                 <button type="button" data-cart-action="increase">+</button>
               </div>
-              <div class="cart-item-total"><span class="helper-text">Total</span><strong>${formatMoney(lineTotal, product.currency)}</strong></div>
-              <button type="button" class="btn btn-ghost" data-cart-action="remove">${icon('trash-2')}Șterge</button>
+              <div class="cart-item-pricing" aria-label="Detalii preț">
+                <div class="cart-item-price">
+                  <span class="helper-text">Preț / bucată</span>
+                  <strong>${formatMoney(unitPrice, product.currency)}</strong>
+                </div>
+                <div class="cart-item-total">
+                  <span class="helper-text">Total</span>
+                  <strong>${formatMoney(lineTotal, product.currency)}</strong>
+                </div>
+              </div>
+              <button type="button" class="btn btn-ghost cart-item-remove" data-cart-action="remove">${icon('trash-2')}Șterge</button>
             </article>
           `;
         }).join('')}
