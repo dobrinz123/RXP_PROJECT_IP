@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, Boolean
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, Boolean, LargeBinary
+from sqlalchemy.dialects.postgresql import ARRAY, BYTEA
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base
@@ -24,7 +24,9 @@ class Product(Base):
     currency = Column(String(8), default="ron")
     stock = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
-    image_url = Column(Text, nullable=True) 
+    image_url = Column(Text, nullable=True)
+    image_data = Column(BYTEA, nullable=True)        # binary content stored in DB
+    image_mime = Column(String(64), nullable=True)   # ex: image/jpeg
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     category = Column(String(50), nullable=True, index=True)    # ex: 'car_tuning', 'suporti_numar'
     tags = Column(ARRAY(String), nullable=False, default=list)  # BUG-25: default=list (nu []), evita shared mutable

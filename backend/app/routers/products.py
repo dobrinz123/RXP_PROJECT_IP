@@ -1,5 +1,5 @@
 # app/routers/products.py
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -40,6 +40,17 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
     if not p or not p.is_active:
         raise HTTPException(status_code=404, detail="Produs inexistent")
     return p
+
+@router.get("/{product_id}/image")
+def get_product_image(product_id: int, db: Session = Depends(get_db)):
+    p = db.get(Product, product_id)
+    if not p or not p.is_active or not p.image_data:
+        raise HTTPException(status_code=404, detail="Imagine inexistentă")
+    return Response(
+        content=bytes(p.image_data),
+        media_type=p.image_mime or "image/jpeg",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 # ---------- ADMIN ----------
 @router.post("", response_model=ProductOut)
