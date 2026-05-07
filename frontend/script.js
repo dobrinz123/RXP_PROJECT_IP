@@ -1013,6 +1013,13 @@ async function renderProductPage() {
     const stock = Number(product.stock || 0);
 
     host.innerHTML = `
+      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+        <ol class="breadcrumb-list">
+          <li><a href="index.html">Acasă</a></li>
+          <li><a href="categories.html">Produse</a></li>
+          <li aria-current="page">${escapeHtml(product.name || 'Produs')}</li>
+        </ol>
+      </nav>
       <div class="product-detail-grid">
         <section class="surface-card product-gallery-card">
           <div class="product-gallery-main">
@@ -1156,22 +1163,24 @@ async function renderCartPage() {
               <div class="cart-item-meta">
                 <h3>${escapeHtml(product.name || 'Produs')}</h3>
               </div>
-              <div class="qty-stepper" aria-label="Cantitate">
-                <button type="button" data-cart-action="decrease">−</button>
-                <span>${quantity}</span>
-                <button type="button" data-cart-action="increase">+</button>
-              </div>
-              <div class="cart-item-pricing" aria-label="Detalii preț">
-                <div class="cart-item-price">
-                  <span class="helper-text">Preț / bucată</span>
-                  <strong>${formatMoney(unitPrice, product.currency)}</strong>
+              <div class="cart-item-actions-row">
+                <div class="qty-stepper" aria-label="Cantitate">
+                  <button type="button" data-cart-action="decrease">−</button>
+                  <span>${quantity}</span>
+                  <button type="button" data-cart-action="increase">+</button>
                 </div>
-                <div class="cart-item-total">
-                  <span class="helper-text">Total</span>
-                  <strong>${formatMoney(lineTotal, product.currency)}</strong>
+                <div class="cart-item-pricing" aria-label="Detalii preț">
+                  <div class="cart-item-price">
+                    <span class="helper-text">Preț / buc.</span>
+                    <strong>${formatMoney(unitPrice, product.currency)}</strong>
+                  </div>
+                  <div class="cart-item-total">
+                    <span class="helper-text">Total</span>
+                    <strong>${formatMoney(lineTotal, product.currency)}</strong>
+                  </div>
                 </div>
+                <button type="button" class="btn btn-ghost cart-item-remove" data-cart-action="remove">${icon('trash-2')}Șterge</button>
               </div>
-              <button type="button" class="btn btn-ghost cart-item-remove" data-cart-action="remove">${icon('trash-2')}Șterge</button>
             </article>
           `;
         }).join('')}
