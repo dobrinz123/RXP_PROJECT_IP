@@ -1753,7 +1753,9 @@ p {
 }
 
 .cart-item-meta h3 {
-  overflow-wrap: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cart-item-meta p {
@@ -1771,6 +1773,8 @@ p {
   display: grid;
   gap: var(--space-12);
   min-width: 0;
+  justify-items: center;
+  text-align: center;
 }
 
 .cart-item-price,
@@ -1823,13 +1827,21 @@ p {
   background: var(--color-primary-light);
 }
 
-.qty-stepper input,
-.qty-stepper span {
+.qty-stepper input {
   width: 48px;
-  min-height: 40px;
+  height: 40px;
   padding: 0;
   border: 0;
   text-align: center;
+  font-weight: 600;
+}
+
+.qty-stepper span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 40px;
   font-weight: 600;
 }
 

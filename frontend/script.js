@@ -1155,7 +1155,6 @@ async function renderCartPage() {
               <img src="${escapeHtml(product.image_url || 'images/product-placeholder.png')}" alt="${escapeHtml(product.name || 'Produs')}">
               <div class="cart-item-meta">
                 <h3>${escapeHtml(product.name || 'Produs')}</h3>
-                ${categoryLabel(product.category) ? `<p class="helper-text">${escapeHtml(categoryLabel(product.category))}</p>` : ''}
               </div>
               <div class="qty-stepper" aria-label="Cantitate">
                 <button type="button" data-cart-action="decrease">−</button>
