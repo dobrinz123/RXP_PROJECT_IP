@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recenzii clienți - RXP CUSTOM3D</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js?v=20260427"></script>
+  <style>
+    .review-stars { color: var(--color-primary); font-size: 18px; letter-spacing: 2px; }
+    .review-card { border: 1px solid var(--color-neutral-100); border-radius: var(--radius-md); background: var(--color-white); box-shadow: var(--shadow-sm); padding: var(--space-24); display: grid; gap: var(--space-12); }
+    .review-author { display: flex; align-items: center; gap: var(--space-12); }
+    .review-avatar { width: 44px; height: 44px; border-radius: 999px; background: var(--color-primary-light); display: flex; align-items: center; justify-content: center; color: var(--color-primary); font-weight: 700; font-size: 18px; flex-shrink: 0; }
+    .review-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-24); }
+    .rating-summary { display: flex; align-items: center; gap: var(--space-32); padding: var(--space-32); background: var(--color-primary-light); border-radius: var(--radius-md); margin-bottom: var(--space-48); flex-wrap: wrap; }
+    .rating-big { font-size: 64px; line-height: 1; font-weight: 700; color: var(--color-primary); }
+    @media (max-width: 768px) { .review-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 1024px) { .review-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body data-page="">
+  <div id="site-header"></div>
+
+  <main class="page-shell">
+    <div class="container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+        <ol class="breadcrumb-list">
+          <li><a href="index.html">Acasă</a></li>
+          <li aria-current="page">Recenzii</li>
+        </ol>
+      </nav>
+
+      <div class="section-heading">
+        <span class="section-eyebrow">Clienți mulțumiți</span>
+        <h1 class="page-title">Ce spun clienții noștri</h1>
+        <p class="page-copy">Recenziile sunt colectate de la cumpărători verificați, direct după livrarea comenzii.</p>
+      </div>
+
+      <div class="rating-summary">
+        <div class="rating-big">4.9</div>
+        <div>
+          <div class="review-stars">★★★★★</div>
+          <p style="margin-top: 6px; font-weight: 600;">din 127 de recenzii verificate</p>
+          <p class="helper-text" style="margin-top: 4px;">Recenzii colectate în perioada 2024–2026</p>
+        </div>
+        <div style="display: grid; gap: 6px; flex: 1; min-width: 200px;">
+          <div style="display: flex; align-items: center; gap: 10px; font-size: 14px;">
+            <span style="width: 50px;">★★★★★</span>
+            <div style="flex: 1; height: 8px; background: var(--color-neutral-100); border-radius: 999px; overflow: hidden;"><div style="width: 91%; height: 100%; background: var(--color-primary); border-radius: 999px;"></div></div>
+            <span class="helper-text">91%</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; font-size: 14px;">
+            <span style="width: 50px;">★★★★</span>
+            <div style="flex: 1; height: 8px; background: var(--color-neutral-100); border-radius: 999px; overflow: hidden;"><div style="width: 7%; height: 100%; background: var(--color-primary); border-radius: 999px;"></div></div>
+            <span class="helper-text">7%</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; font-size: 14px;">
+            <span style="width: 50px;">★★★</span>
+            <div style="flex: 1; height: 8px; background: var(--color-neutral-100); border-radius: 999px; overflow: hidden;"><div style="width: 2%; height: 100%; background: var(--color-neutral-300); border-radius: 999px;"></div></div>
+            <span class="helper-text">2%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-grid">
+        <article class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p style="line-height: 1.6;">"Suportul magnetic este exact ce căutam. Calitate excelentă, se potrivește perfect pe BMW-ul meu F30. Instalare în 3 minute, fără unelte. Recomand cu toată încrederea!"</p>
+          <div class="review-author">
+            <div class="review-avatar">A</div>
+            <div>
+              <strong style="font-size: 14px;">Andrei M.</strong>
+              <p class="helper-text">BMW F30 · Mai 2026</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p style="line-height: 1.6;">"Am comandat 2 seturi pentru că primul l-am recomandat tuturor prietenilor mei. Calitate premium, ambalaj îngrijit și livrare în 24h. O să mai comand cu siguranță."</p>
+          <div class="review-author">
+            <div class="review-avatar">M</div>
+            <div>
+              <strong style="font-size: 14px;">Maria P.</strong>
+              <p class="helper-text">Audi A3 · Apr 2026</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p style="line-height: 1.6;">"Produse de calitate, finisaje excelente. Am luat suportul negru mat și arată de parcă e montat din fabrică pe Mercedes. Livrare rapidă, comunicare bună cu echipa."</p>
+          <div class="review-author">
+            <div class="review-avatar">C</div>
+            <div>
+              <strong style="font-size: 14px;">Ciprian D.</strong>
+              <p class="helper-text">Mercedes C-Class · Apr 2026</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p style="line-height: 1.6;">"Am cerut o personalizare cu sigla mașinii în relief și rezultatul a depășit așteptările. Detalii fine, culori exact cum am cerut. Echipa RXP e profesionistă și rapidă."</p>
+          <div class="review-author">
+            <div class="review-avatar">R</div>
+            <div>
+              <strong style="font-size: 14px;">Radu V.</strong>
+              <p class="helper-text">Volkswagen Golf · Mar 2026</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p style="line-height: 1.6;">"Rezistă excelent și pe vreme rea. Am trecut prin zăpadă, ploaie, caniculă — suportul stă perfect și numărul nu s-a mișcat. Material solid, nu plastic ieftin."</p>
+          <div class="review-author">
+            <div class="review-avatar">I</div>
+            <div>
+              <strong style="font-size: 14px;">Ioana T.</strong>
+              <p class="helper-text">Dacia Logan · Feb 2026</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="review-card">
+          <div class="review-stars">★★★★☆</div>
+          <p style="line-height: 1.6;">"Produsul e foarte bun, singurul minus e că livrarea a durat 3 zile în loc de 2. În rest, totul perfect. Am mai comandat deja și a doua oară."</p>
+          <div class="review-author">
+            <div class="review-avatar">G</div>
+            <div>
+              <strong style="font-size: 14px;">George B.</strong>
+              <p class="helper-text">Toyota Corolla · Ian 2026</p>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div style="text-align: center; margin-top: var(--space-64);">
+        <h2 style="margin-bottom: var(--space-12);">Ai cumpărat de la noi?</h2>
+        <p style="margin-bottom: var(--space-24); color: var(--color-neutral-700);">Lasă o recenzie și ajută alți clienți să ia decizia corectă. Trimite-ne un email cu experiența ta.</p>
+        <a href="contact.html" class="btn btn-primary">Trimite o recenzie</a>
+      </div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact - RXP CUSTOM3D</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js?v=20260427"></script>
+</head>
+<body data-page="">
+  <div id="site-header"></div>
+
+  <main class="page-shell">
+    <div class="container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+        <ol class="breadcrumb-list">
+          <li><a href="index.html">Acasă</a></li>
+          <li aria-current="page">Contact</li>
+        </ol>
+      </nav>
+
+      <div class="section-heading">
+        <span class="section-eyebrow">Contactează-ne</span>
+        <h1 class="page-title">Suntem aici să te ajutăm</h1>
+        <p class="page-copy">Ai o întrebare despre un produs, vrei să comanzi ceva personalizat sau ai nevoie de asistență cu o comandă existentă? Scrie-ne și îți răspundem în cel mai scurt timp.</p>
+      </div>
+
+      <div class="two-column-band" style="align-items: start;">
+        <div class="contact-card">
+          <h2 style="margin-bottom: var(--space-24);">Date de contact</h2>
+
+          <ul class="contact-list">
+            <li>
+              <span class="helper-text">Email</span>
+              <a href="mailto:contact@rxpcustom3d.ro">contact@rxpcustom3d.ro</a>
+            </li>
+            <li>
+              <span class="helper-text">Telefon</span>
+              <a href="tel:+40700123456">+40 700 123 456</a>
+            </li>
+            <li>
+              <span class="helper-text">Program</span>
+              <span>Luni – Vineri, 09:00 – 18:00</span>
+            </li>
+            <li>
+              <span class="helper-text">Comenzi personalizate</span>
+              <a href="custom.html">Formular de comandă personalizată →</a>
+            </li>
+          </ul>
+
+          <div style="margin-top: var(--space-32); padding: var(--space-24); background: var(--color-primary-light); border-radius: var(--radius-md);">
+            <h3 style="color: var(--color-primary); margin-bottom: var(--space-8);">Timp de răspuns</h3>
+            <p style="font-size: 14px; line-height: 1.6;">Răspundem la toate mesajele în maxim <strong>24 de ore lucrătoare</strong>. Pentru comenzi urgente, te rugăm să ne contactezi telefonic.</p>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h2 style="margin-bottom: var(--space-8);">Trimite un mesaj</h2>
+          <p class="helper-text" style="margin-bottom: var(--space-24);">Completează formularul și te contactăm noi.</p>
+
+          <form id="contact-form" novalidate>
+            <div class="field">
+              <label class="field-label" for="contact-name">Nume complet</label>
+              <input class="input" type="text" id="contact-name" name="name" placeholder="Ex: Andrei Popescu" required>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="contact-email">Adresă de email</label>
+              <input class="input" type="email" id="contact-email" name="email" placeholder="Ex: andrei@email.ro" required>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="contact-subject">Subiect</label>
+              <select class="select" id="contact-subject" name="subject">
+                <option value="">Alege subiectul</option>
+                <option value="comanda">Informații despre o comandă</option>
+                <option value="personalizare">Comandă personalizată</option>
+                <option value="retur">Retur sau reclamație</option>
+                <option value="parteneriat">Parteneriat</option>
+                <option value="altele">Altele</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="contact-message">Mesaj</label>
+              <textarea class="textarea" id="contact-message" name="message" placeholder="Descrie pe scurt ce dorești sau în ce te putem ajuta..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full" style="margin-top: var(--space-8);">Trimite mesajul</button>
+            <p id="contact-status" class="status-message hidden" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var form = document.getElementById('contact-form');
+      var status = document.getElementById('contact-status');
+      if (!form) return;
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (typeof showToast === 'function') {
+          showToast('Mesajul tău a fost trimis! Te contactăm în 24h.', 'success');
+        }
+        if (status) {
+          status.textContent = 'Mesajul tău a fost trimis! Te contactăm în 24h.';
+          status.className = 'status-message success';
+        }
+        form.reset();
+      });
+    });
+  </script>
+</body>
+</html>

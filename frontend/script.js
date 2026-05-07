@@ -383,20 +383,20 @@ function renderFooter() {
           <div>
             <div class="footer-heading">Companie</div>
             <div class="footer-links">
-              <a href="${homeAnchor('#despre')}">Despre noi</a>
-              <a href="${homeAnchor('#contact')}">Contact</a>
-              <a href="404.html">Blog</a>
-              <a href="404.html">Recenzii</a>
+              <a href="despre.html">Despre noi</a>
+              <a href="contact.html">Contact</a>
+              <a href="blog.html">Blog</a>
+              <a href="recenzii.html">Recenzii</a>
             </div>
           </div>
 
           <div>
             <div class="footer-heading">Informații</div>
             <div class="footer-links">
-              <a href="404.html">Livrare</a>
-              <a href="404.html">Retururi</a>
-              <a href="404.html">Termeni și condiții</a>
-              <a href="404.html">Politica de confidențialitate</a>
+              <a href="livrare.html">Livrare</a>
+              <a href="retururi.html">Retururi</a>
+              <a href="termeni.html">Termeni și condiții</a>
+              <a href="confidentialitate.html">Politica de confidențialitate</a>
               <a href="https://anpc.ro/" target="_blank" rel="noreferrer">ANPC</a>
             </div>
           </div>

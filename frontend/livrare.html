@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Informații livrare - RXP CUSTOM3D</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js?v=20260427"></script>
+  <style>
+    .info-table { width: 100%; border-collapse: collapse; margin: var(--space-24) 0; font-size: 15px; }
+    .info-table th, .info-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--color-neutral-100); }
+    .info-table th { background: var(--color-neutral-50); font-weight: 600; color: var(--color-neutral-900); }
+    .info-table tr:last-child td { border-bottom: 0; }
+    .info-table td:last-child { font-weight: 600; }
+    .delivery-step { display: flex; gap: var(--space-16); align-items: flex-start; }
+    .delivery-step-num { width: 36px; height: 36px; border-radius: 999px; background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; font-size: 14px; }
+    .delivery-steps { display: grid; gap: var(--space-24); }
+  </style>
+</head>
+<body data-page="">
+  <div id="site-header"></div>
+
+  <main class="page-shell">
+    <div class="container">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+        <ol class="breadcrumb-list">
+          <li><a href="index.html">Acasă</a></li>
+          <li aria-current="page">Livrare</li>
+        </ol>
+      </nav>
+
+      <div class="section-heading">
+        <span class="section-eyebrow">Informații</span>
+        <h1 class="page-title">Livrare & Transport</h1>
+        <p class="page-copy">Livrăm în toată România prin curier rapid. Comenzile sunt procesate și expediate în 1–2 zile lucrătoare de la confirmare.</p>
+      </div>
+
+      <div class="two-column-band" style="align-items: start; margin-bottom: var(--space-48);">
+        <div class="surface-card">
+          <h2 style="margin-bottom: var(--space-24);">Opțiuni de livrare</h2>
+          <table class="info-table">
+            <thead>
+              <tr>
+                <th>Tip livrare</th>
+                <th>Termen</th>
+                <th>Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Standard (FAN Courier)</td>
+                <td>24–48h lucrătoare</td>
+                <td>25,00 RON</td>
+              </tr>
+              <tr>
+                <td>Urgentă (în funcție de disponibilitate)</td>
+                <td>24h lucrătoare</td>
+                <td>40,00 RON</td>
+              </tr>
+              <tr>
+                <td>Gratuită la comenzi peste 200 RON</td>
+                <td>24–48h lucrătoare</td>
+                <td style="color: var(--color-success); font-weight: 700;">GRATUIT</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="helper-text">Termenele de livrare sunt calculate de la momentul expedierii, nu de la plasarea comenzii. Comenzile plasate vineri după-amiaza sau în weekend sunt procesate luni.</p>
+        </div>
+
+        <div class="surface-card">
+          <h2 style="margin-bottom: var(--space-24);">Procesul de livrare</h2>
+          <div class="delivery-steps">
+            <div class="delivery-step">
+              <div class="delivery-step-num">1</div>
+              <div>
+                <strong>Confirmare comandă</strong>
+                <p class="helper-text" style="margin-top: 4px;">Primești un email de confirmare imediat după plasarea comenzii.</p>
+              </div>
+            </div>
+            <div class="delivery-step">
+              <div class="delivery-step-num">2</div>
+              <div>
+                <strong>Producție și ambalare</strong>
+                <p class="helper-text" style="margin-top: 4px;">Comanda ta este produsă și ambalată în 1–2 zile lucrătoare.</p>
+              </div>
+            </div>
+            <div class="delivery-step">
+              <div class="delivery-step-num">3</div>
+              <div>
+                <strong>Predare curier</strong>
+                <p class="helper-text" style="margin-top: 4px;">Predăm coletul la FAN Courier și primești AWB-ul pe email.</p>
+              </div>
+            </div>
+            <div class="delivery-step">
+              <div class="delivery-step-num">4</div>
+              <div>
+                <strong>Livrare la adresă</strong>
+                <p class="helper-text" style="margin-top: 4px;">Curierul livrează la adresa specificată în comandă. Poți urmări coletul cu AWB-ul primit.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="surface-card" style="margin-bottom: var(--space-32);">
+        <h2 style="margin-bottom: var(--space-16);">Informații importante</h2>
+        <div class="features-grid" style="margin-top: var(--space-24);">
+          <div>
+            <h3 style="margin-bottom: var(--space-8);">Zonă de livrare</h3>
+            <p style="font-size: 15px; line-height: 1.6;">Livrăm în toată România, inclusiv în localitățile rurale și în zonele muntoase. Nu livrăm în afara României momentan — pentru comenzi internaționale, contactați-ne.</p>
+          </div>
+          <div>
+            <h3 style="margin-bottom: var(--space-8);">Tracking colet</h3>
+            <p style="font-size: 15px; line-height: 1.6;">Odată expediat, vei primi pe email AWB-ul FAN Courier. Poți urmări coletul pe <a href="https://www.fancourier.ro" target="_blank" rel="noreferrer" style="color: var(--color-primary);">fancourier.ro</a> sau în aplicația mobilă FAN.</p>
+          </div>
+          <div>
+            <h3 style="margin-bottom: var(--space-8);">Produse personalizate</h3>
+            <p style="font-size: 15px; line-height: 1.6;">Produsele personalizate (comandate prin formularul de personalizare) au un termen de producție de 3–5 zile lucrătoare înainte de expediere.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: var(--space-32); background: var(--color-primary-light); border-radius: var(--radius-md); text-align: center;">
+        <h2 style="margin-bottom: var(--space-8);">Ai întrebări despre livrarea ta?</h2>
+        <p style="margin-bottom: var(--space-24); color: var(--color-neutral-700);">Echipa noastră este disponibilă luni–vineri, 09:00–18:00 pentru orice nelămurire.</p>
+        <a href="contact.html" class="btn btn-primary">Contactează-ne</a>
+      </div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+</body>
+</html>
