@@ -344,6 +344,14 @@ function statusClass(status = '') {
   return 'status-processing';
 }
 
+function categoryLabel(category) {
+  return ({
+    suporti_numar: 'Suporți număr',
+    car_tuning: 'Car Tuning',
+    accesorii_auto: 'Accesorii auto'
+  })[String(category || '').toLowerCase().trim()] || '';
+}
+
 function renderFooter() {
   const host = qs('#site-footer');
   if (!host) return;
@@ -1101,6 +1109,7 @@ async function renderCartPage() {
   const summaryHost = qs('#cart-summary');
   const panel = qs('#cod-panel');
   const form = qs('#cod-form');
+  const layout = qs('.cart-layout');
 
   if (!itemsHost || !summaryHost || !panel || !form) return;
 
@@ -1112,6 +1121,7 @@ async function renderCartPage() {
     setCartCounter(items);
 
     if (!items.length) {
+      if (layout) layout.classList.add('cart-layout--empty');
       itemsHost.innerHTML = `
         <div class="empty-state cart-empty">
           <div class="icon-badge">${icon('shopping-cart', 'icon-xl')}</div>
@@ -1124,6 +1134,8 @@ async function renderCartPage() {
       panel.classList.remove('is-open');
       return;
     }
+
+    if (layout) layout.classList.remove('cart-layout--empty');
 
     const subtotalMinor = items.reduce((sum, item) => {
       const unitPrice = item.product?.price ?? item.price ?? 0;
@@ -1143,7 +1155,7 @@ async function renderCartPage() {
               <img src="${escapeHtml(product.image_url || 'images/product-placeholder.png')}" alt="${escapeHtml(product.name || 'Produs')}">
               <div class="cart-item-meta">
                 <h3>${escapeHtml(product.name || 'Produs')}</h3>
-                <p>${escapeHtml(product.category || 'Produs standard')}</p>
+                ${categoryLabel(product.category) ? `<p class="helper-text">${escapeHtml(categoryLabel(product.category))}</p>` : ''}
               </div>
               <div class="qty-stepper" aria-label="Cantitate">
                 <button type="button" data-cart-action="decrease">−</button>
