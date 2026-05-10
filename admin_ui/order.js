@@ -1,12 +1,16 @@
 const API = '/api';
-const jwtInput = document.querySelector('#jwt');
-const saved = sessionStorage.getItem('admintoken') || localStorage.getItem('admin_jwt') || localStorage.getItem('admintoken') || '';
-if (saved) jwtInput.value = saved;
-document.querySelector('#saveToken').onclick = () => {
-  const t = jwtInput.value.trim();
-  sessionStorage.setItem('admintoken', t);
-  alert('Token salvat.');
+
+const STATUS_LABEL = {
+  created: 'Creată', pending: 'În așteptare', paid: 'Plătită',
+  processing: 'În procesare', shipped: 'Expediată',
+  delivered: 'Livrată', cancelled: 'Anulată', canceled: 'Anulată'
 };
+
+function statusBadge(status) {
+  const key = (status || '').toString().toLowerCase();
+  const label = STATUS_LABEL[key] || status || '—';
+  return `<span class="status-badge status-${key}">${esc(label)}</span>`;
+}
 
 const qs = s => document.querySelector(s);
 const param = name => new URLSearchParams(location.search).get(name);
@@ -151,7 +155,7 @@ async function load() {
       totalMinor = subtotalMinor + (shippingMinor || 0);
     }
 
-    qs('#status').textContent = status;
+    qs('#status').innerHTML = statusBadge(status);
     qs('#created_at').textContent = createdTxt;
     qs('#payment_method').textContent = payMethod;
 

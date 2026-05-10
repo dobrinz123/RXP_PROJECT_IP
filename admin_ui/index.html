@@ -11,132 +11,331 @@
 <!-- ═══════════ AUTH BLOCKER ═══════════ -->
 <div id="auth-blocker">
   <div class="login-card">
-    <span class="lock-icon">🔒</span>
-    <h1>Admin RXP</h1>
+    <div class="brand-mark">RXP</div>
+    <h1>Bun venit</h1>
     <p class="subtitle">Autentifică-te pentru a accesa panoul de administrare</p>
     <form id="login-form" autocomplete="on">
-      <input id="login-email" type="email" placeholder="Email" autocomplete="email" required>
-      <input id="login-pass" type="password" placeholder="Parolă" autocomplete="current-password" required>
+      <div class="field">
+        <label for="login-email">Email</label>
+        <input id="login-email" type="email" placeholder="admin@rxp.ro" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="login-pass">Parolă</label>
+        <input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
       <button type="submit" id="login-btn">Autentificare</button>
     </form>
     <div class="login-error" id="login-error"></div>
+    <div class="footer-hint">Sesiunea expiră automat din motive de securitate.</div>
   </div>
 </div>
 
-<!-- ═══════════ ADMIN CONTENT (hidden until auth) ═══════════ -->
+<!-- ═══════════ ADMIN CONTENT ═══════════ -->
 <div id="admin-content">
   <header>
-    <h1>Admin RXP</h1>
+    <div class="brand">
+      <div class="brand-mark">RXP</div>
+      <div>
+        <h1>Admin Panel</h1>
+        <span class="brand-sub">Panou de administrare</span>
+      </div>
+    </div>
     <div class="header-user">
-      <span class="user-email" id="admin-email-display"></span>
-      <button id="btn-logout" type="button">Logout</button>
+      <div class="user-chip">
+        <span class="avatar" id="admin-avatar">A</span>
+        <span class="user-email" id="admin-email-display"></span>
+      </div>
+      <button id="btn-logout" type="button" class="btn-ghost" title="Deconectare">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Ieși
+      </button>
     </div>
   </header>
 
   <main>
-    <div class="tabs">
-      <div class="tab active" data-t="active">Comenzi active</div>
-      <div class="tab" data-t="done">Comenzi finalizate</div>
-      <div class="tab" data-t="invoices">Facturi</div>
-      <div class="tab" data-t="products">Produse</div>
-      <div class="tab" data-t="settings">Setari Firma</div>
+    <div class="tabs" role="tablist">
+      <div class="tab active" data-t="active" role="tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span class="tab-label">Comenzi active</span>
+      </div>
+      <div class="tab" data-t="done" role="tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg>
+        <span class="tab-label">Comenzi finalizate</span>
+      </div>
+      <div class="tab" data-t="invoices" role="tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+        <span class="tab-label">Facturi</span>
+      </div>
+      <div class="tab" data-t="products" role="tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span class="tab-label">Produse</span>
+      </div>
+      <div class="tab" data-t="settings" role="tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.36.16.69.36 1 .61.31.25.59.55.82.89.06.08.11.16.15.25H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="tab-label">Setări firmă</span>
+      </div>
     </div>
 
-    <section id="panel-active" class="card">
-      <div class="row">
-        <select id="statusActive">
-          <option value="">(toate)</option>
-          <option>created</option>
-          <option>pending</option>
-          <option>paid</option>
-          <option>processing</option>
-          <option>shipped</option>
-        </select>
-        <button id="btn-load-active" type="button">Load</button>
+    <!-- ═══════════ COMENZI ACTIVE ═══════════ -->
+    <section id="panel-active">
+      <div class="page-intro">
+        <h2>Comenzi active</h2>
+        <p>Comenzi în curs de procesare — apasă pe statusul fiecăreia pentru a-l actualiza.</p>
       </div>
-      <div id="activeList"></div>
-    </section>
 
-    <section id="panel-done" class="card" style="display:none">
-      <div class="row">
-        <select id="statusDone">
-          <option value="">(toate)</option>
-          <option>delivered</option>
-          <option>canceled</option>
-        </select>
-        <button id="btn-load-done" type="button">Load</button>
-      </div>
-      <div id="doneList"></div>
-    </section>
-
-    <section id="panel-invoices" class="card" style="display:none">
-      <div class="row">
-        <input id="qinvoice" placeholder="caută nr. factură">
-        <button id="btn-load-invoices" type="button">Caută</button>
-      </div>
-      <div id="invoiceList"></div>
-    </section>
-
-    <section id="panel-products" class="card" style="display:none">
-      <div class="row"><button id="btn-reload-products" type="button">Reîncarcă</button></div>
-      <div id="prodList" style="margin:10px 0"></div>
-
-      <h3>Adaugă / editează</h3>
-      <div class="row">
-        <input id="pid" placeholder="ID (gol pt. add)">
-        <input id="sku" placeholder="SKU">
-        <input id="name" placeholder="Nume">
-        <input id="price" placeholder="Preț (bani)">
-        <input id="stock" placeholder="Stoc">
-        <input id="image_url" placeholder="URL imagine">
-        <select id="category">
-          <option value="">(fără)</option>
-          <option value="car_tuning">Car Tuning</option>
-          <option value="suporti_numar">Suporti numar</option>
-        </select>
-        <input id="tags" placeholder="Taguri (ex: mercedes,toyota,bmw)">
-        <label>Activ? <input id="active" type="checkbox" checked></label>
-      </div>
-      <div class="row"><textarea id="desc" placeholder="descriere" style="width:100%;height:80px"></textarea></div>
-      <div class="row">
-        <button id="btn-save" type="button">Salvează</button>
-        <button id="btn-del" type="button">Șterge după ID</button>
-      </div>
-    </section>
-
-    <section id="panel-settings" class="card" style="display:none">
-      <h3>Date Firmă</h3>
-      <p style="color:#666;font-size:13px;margin-top:0">Aceste date apar automat pe facturile generate.</p>
-      <form id="company-form" style="display:grid;gap:12px;max-width:520px">
-        <label>
-          <span style="display:block;font-weight:600;margin-bottom:4px">Denumire Firmă</span>
-          <input id="co-name" type="text" placeholder="ex: SC RXP CUSTOM3D SRL" style="width:100%">
-        </label>
-        <label>
-          <span style="display:block;font-weight:600;margin-bottom:4px">CIF / CUI</span>
-          <input id="co-cif" type="text" placeholder="ex: RO12345678" style="width:100%">
-        </label>
-        <label>
-          <span style="display:block;font-weight:600;margin-bottom:4px">Registrul Comerțului</span>
-          <input id="co-regcom" type="text" placeholder="ex: J40/1234/2024" style="width:100%">
-        </label>
-        <label>
-          <span style="display:block;font-weight:600;margin-bottom:4px">Adresă Sediu</span>
-          <input id="co-address" type="text" placeholder="ex: Str. Exemplu nr. 1, București" style="width:100%">
-        </label>
-        <label>
-          <span style="display:block;font-weight:600;margin-bottom:4px">Cont Bancar (IBAN)</span>
-          <input id="co-iban" type="text" placeholder="ex: RO49AAAA1B31007593840000" style="width:100%">
-        </label>
-        <div>
-          <button type="submit"
-            style="background:#2563eb;color:#fff;border:0;border-radius:8px;padding:10px 20px;font-size:14px;cursor:pointer">Salvează</button>
-          <span id="co-msg" style="margin-left:12px;font-size:13px"></span>
+      <div class="card">
+        <div class="card-header">
+          <div class="toolbar">
+            <div class="field" style="min-width:200px">
+              <select id="statusActive" aria-label="Filtrează după status">
+                <option value="">Toate statusurile</option>
+                <option value="created">Creată</option>
+                <option value="pending">În așteptare</option>
+                <option value="paid">Plătită</option>
+                <option value="processing">În procesare</option>
+                <option value="shipped">Expediată</option>
+              </select>
+            </div>
+            <button id="btn-load-active" type="button" class="btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Reîncarcă
+            </button>
+          </div>
         </div>
-      </form>
+        <div class="card-body card-body--flush">
+          <div id="activeList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ COMENZI FINALIZATE ═══════════ -->
+    <section id="panel-done" style="display:none">
+      <div class="page-intro">
+        <h2>Comenzi finalizate</h2>
+        <p>Istoric comenzi livrate sau anulate.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="toolbar">
+            <div class="field" style="min-width:200px">
+              <select id="statusDone" aria-label="Filtrează după status">
+                <option value="">Toate statusurile</option>
+                <option value="delivered">Livrată</option>
+                <option value="canceled">Anulată</option>
+              </select>
+            </div>
+            <button id="btn-load-done" type="button" class="btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Reîncarcă
+            </button>
+          </div>
+        </div>
+        <div class="card-body card-body--flush">
+          <div id="doneList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ FACTURI ═══════════ -->
+    <section id="panel-invoices" style="display:none">
+      <div class="page-intro">
+        <h2>Facturi</h2>
+        <p>Caută o factură după număr sau răsfoiește lista completă.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="toolbar" style="width:100%">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input id="qinvoice" placeholder="Caută după nr. factură…">
+            </div>
+            <button id="btn-load-invoices" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Caută
+            </button>
+          </div>
+        </div>
+        <div class="card-body card-body--flush">
+          <div id="invoiceList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ PRODUSE ═══════════ -->
+    <section id="panel-products" style="display:none">
+      <div class="page-intro">
+        <h2>Produse</h2>
+        <p>Apasă pe un rând pentru a-l edita. Lasă câmpul ID gol pentru a adăuga un produs nou.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Catalog produse</h3>
+          <button id="btn-reload-products" type="button" class="btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Reîncarcă
+          </button>
+        </div>
+        <div class="card-body card-body--flush">
+          <div id="prodList"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 id="form-product-title">Adaugă produs nou</h3>
+            <p class="helper" id="form-product-hint">Completează detaliile mai jos. Câmpurile cu * sunt obligatorii.</p>
+          </div>
+          <button type="button" class="btn-ghost" id="btn-clear-form" title="Resetează formular">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Anulează
+          </button>
+        </div>
+        <div class="card-body">
+          <fieldset class="fieldset">
+            <legend>Identificare <small>cum recunoaștem produsul</small></legend>
+            <div class="form-grid">
+              <div class="field">
+                <label class="field-label" for="pid">ID</label>
+                <input id="pid" placeholder="Lasă gol pentru produs nou" readonly>
+                <span class="hint">Se completează automat la editare.</span>
+              </div>
+              <div class="field">
+                <label class="field-label" for="sku">SKU *</label>
+                <input id="sku" placeholder="ex: RXP-CT-001">
+              </div>
+              <div class="field" style="grid-column: span 2">
+                <label class="field-label" for="name">Nume produs *</label>
+                <input id="name" placeholder="ex: Suport număr personalizat">
+              </div>
+            </div>
+          </fieldset>
+
+          <hr class="section-divider">
+
+          <fieldset class="fieldset">
+            <legend>Preț & stoc</legend>
+            <div class="form-grid">
+              <div class="field">
+                <label class="field-label" for="price">Preț (în bani) *</label>
+                <input id="price" placeholder="ex: 9999 = 99,99 RON" inputmode="numeric">
+                <span class="hint">Valoarea se introduce în bani (ex: 9999 = 99,99 lei).</span>
+              </div>
+              <div class="field">
+                <label class="field-label" for="stock">Stoc *</label>
+                <input id="stock" placeholder="ex: 25" inputmode="numeric">
+              </div>
+              <div class="field" style="justify-content:flex-end">
+                <label class="checkbox" style="margin-top:24px">
+                  <input id="active" type="checkbox" checked> Produs activ (vizibil în magazin)
+                </label>
+              </div>
+            </div>
+          </fieldset>
+
+          <hr class="section-divider">
+
+          <fieldset class="fieldset">
+            <legend>Categorie & taguri</legend>
+            <div class="form-grid">
+              <div class="field">
+                <label class="field-label" for="category">Categorie</label>
+                <select id="category">
+                  <option value="">— fără categorie —</option>
+                  <option value="car_tuning">Car Tuning</option>
+                  <option value="suporti_numar">Suporți număr</option>
+                </select>
+              </div>
+              <div class="field" style="grid-column: span 2">
+                <label class="field-label" for="tags">Taguri</label>
+                <input id="tags" placeholder="ex: mercedes, toyota, bmw">
+                <span class="hint">Separate prin virgulă. Ajută la căutare.</span>
+              </div>
+            </div>
+          </fieldset>
+
+          <hr class="section-divider">
+
+          <fieldset class="fieldset">
+            <legend>Detalii vizuale</legend>
+            <div class="form-grid">
+              <div class="field" style="grid-column: span 2">
+                <label class="field-label" for="image_url">URL imagine</label>
+                <input id="image_url" placeholder="https://…">
+              </div>
+              <div class="field" style="grid-column: 1 / -1">
+                <label class="field-label" for="desc">Descriere</label>
+                <textarea id="desc" placeholder="Detalii care apar pe pagina produsului…" style="min-height:90px;resize:vertical"></textarea>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="form-actions">
+            <button id="btn-save" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Salvează
+            </button>
+            <button id="btn-del" type="button" class="btn-danger">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Șterge produsul
+            </button>
+            <span class="status-msg" id="prod-msg"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ SETĂRI FIRMĂ ═══════════ -->
+    <section id="panel-settings" style="display:none">
+      <div class="page-intro">
+        <h2>Setări firmă</h2>
+        <p>Aceste date apar automat pe facturile generate către clienți.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Date de facturare</h3>
+        </div>
+        <div class="card-body">
+          <form id="company-form" class="form-grid--narrow">
+            <div class="field">
+              <label class="field-label" for="co-name">Denumire firmă</label>
+              <input id="co-name" type="text" placeholder="ex: SC RXP CUSTOM3D SRL">
+            </div>
+            <div class="field">
+              <label class="field-label" for="co-cif">CIF / CUI</label>
+              <input id="co-cif" type="text" placeholder="ex: RO12345678">
+            </div>
+            <div class="field">
+              <label class="field-label" for="co-regcom">Registrul Comerțului</label>
+              <input id="co-regcom" type="text" placeholder="ex: J40/1234/2024">
+            </div>
+            <div class="field">
+              <label class="field-label" for="co-address">Adresă sediu</label>
+              <input id="co-address" type="text" placeholder="ex: Str. Exemplu nr. 1, București">
+            </div>
+            <div class="field">
+              <label class="field-label" for="co-iban">Cont bancar (IBAN)</label>
+              <input id="co-iban" type="text" placeholder="ex: RO49AAAA1B31007593840000">
+            </div>
+            <div class="form-actions">
+              <button type="submit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Salvează
+              </button>
+              <span id="co-msg" class="status-msg"></span>
+            </div>
+          </form>
+        </div>
+      </div>
     </section>
   </main>
 </div>
+
+<div id="toast-host"></div>
 
 <script src="admin.js"></script>
 </body>
