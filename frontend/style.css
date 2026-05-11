@@ -1351,6 +1351,7 @@ p {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-32);
+  align-items: start;
 }
 
 .product-info-card .page-title {
@@ -1364,11 +1365,19 @@ p {
   padding: var(--space-32);
 }
 
+.product-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
 .product-gallery-main {
   overflow: hidden;
   border-radius: var(--radius-md);
   background: var(--color-neutral-100);
   aspect-ratio: 1 / 1;
+  max-width: 520px;
+  margin: 0 auto;
 }
 
 .product-gallery-main img {

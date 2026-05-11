@@ -928,7 +928,7 @@ async function renderCategoryPage() {
   const meta = {
     car_tuning: {
       title: 'Car Tuning',
-      description: 'Accesorii și piese personalizate. Poți filtra rapid după marcă.'
+      description: 'Accesorii și piese personalizate pentru mașina ta.'
     },
     suporti_numar: {
       title: 'Suporți număr',
@@ -940,41 +940,12 @@ async function renderCategoryPage() {
   if (titleNode) titleNode.textContent = currentMeta.title;
   if (descriptionNode) descriptionNode.textContent = currentMeta.description;
 
+  if (filterNode) filterNode.innerHTML = '';
+
   host.innerHTML = skeletonCards(4);
 
   try {
-    let products = await fetchProducts(`/products?category=${encodeURIComponent(slug || '')}`);
-
-    if (slug === 'car_tuning' && filterNode) {
-      const selectedTag = param('tag') || '';
-      const tags = Array.from(new Set(products.flatMap((product) => product.tags || []))).sort();
-      filterNode.innerHTML = tags.length ? `
-        <label for="brand-filter">Marcă</label>
-        <select id="brand-filter" class="select">
-          <option value="">Toate</option>
-          ${tags.map((tag) => `<option value="${escapeHtml(tag)}" ${tag === selectedTag ? 'selected' : ''}>${escapeHtml(tag)}</option>`).join('')}
-        </select>
-      ` : '';
-
-      const select = qs('#brand-filter', filterNode);
-      select?.addEventListener('change', async () => {
-        const nextTag = select.value;
-        host.innerHTML = skeletonCards(4);
-        const query = nextTag
-          ? `/products?category=${encodeURIComponent(slug)}&tag=${encodeURIComponent(nextTag)}`
-          : `/products?category=${encodeURIComponent(slug)}`;
-        const filteredProducts = await fetchProducts(query);
-        renderProductGrid(host, filteredProducts, 'Nu există produse pentru filtrul selectat.');
-        history.replaceState({}, '', `category.html?slug=${encodeURIComponent(slug)}${nextTag ? `&tag=${encodeURIComponent(nextTag)}` : ''}`);
-      });
-
-      if (selectedTag) {
-        products = await fetchProducts(`/products?category=${encodeURIComponent(slug)}&tag=${encodeURIComponent(selectedTag)}`);
-      }
-    } else if (filterNode) {
-      filterNode.innerHTML = '';
-    }
-
+    const products = await fetchProducts(`/products?category=${encodeURIComponent(slug || '')}`);
     renderProductGrid(host, products, 'Nu există produse în această categorie.');
   } catch (error) {
     host.innerHTML = `<div class="empty-state"><div class="icon-badge">${icon('package', 'icon-xl')}</div><h3>Nu am putut încărca categoria</h3><p>${escapeHtml(error.message || 'Încearcă din nou mai târziu.')}</p></div>`;
@@ -1009,7 +980,8 @@ async function renderProductPage() {
 
   try {
     const product = await fetchProduct(productId);
-    const images = Array.isArray(product.images) && product.images.length ? product.images : [product.image_url || 'images/product-placeholder.png'];
+    const rawImages = Array.isArray(product.images) && product.images.length ? product.images : [product.image_url || 'images/product-placeholder.png'];
+    const images = Array.from(new Set(rawImages.filter(Boolean)));
     const stock = Number(product.stock || 0);
 
     host.innerHTML = `
@@ -1025,13 +997,14 @@ async function renderProductPage() {
           <div class="product-gallery-main">
             <img id="product-main-image" src="${escapeHtml(images[0])}" alt="${escapeHtml(product.name || 'Produs RXP CUSTOM3D')}">
           </div>
+          ${images.length > 1 ? `
           <div class="product-gallery-thumbs">
             ${images.map((image, index) => `
               <button type="button" class="product-thumb ${index === 0 ? 'is-active' : ''}" data-product-image="${escapeHtml(image)}" aria-label="Imagine produs ${index + 1}">
                 <img src="${escapeHtml(image)}" alt="">
               </button>
             `).join('')}
-          </div>
+          </div>` : ''}
         </section>
 
         <section class="surface-card product-info-card">
