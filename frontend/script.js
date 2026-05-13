@@ -29,6 +29,7 @@ const ICONS = {
   'layout-grid': '<rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect>',
   'layout-list': '<rect width="18" height="5" x="3" y="4" rx="1"></rect><rect width="18" height="5" x="3" y="15" rx="1"></rect>',
   search: '<circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>',
+  'refresh-cw': '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"></path><path d="M21 3v5h-5"></path>',
   facebook: '<path d="M17 2h-3a5 5 0 0 0-5 5v3H6v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3V2Z"></path>',
   instagram: '<rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37a4 4 0 1 1-4.37-4.37 4 4 0 0 1 4.37 4.37Z"></path><path d="M17.5 6.5h.01"></path>',
   tiktok: '<path d="M14 4v9.5a3.5 3.5 0 1 1-3.5-3.5"></path><path d="M14 4c1.2 2.5 3 4 5 4"></path>'
@@ -963,38 +964,50 @@ async function renderCategoryPage() {
     history.replaceState({}, '', url);
   };
 
+  const tagLabel = () => state.tag || 'Toate';
+
   const renderFilterBar = () => {
     if (!filterNode) return;
-    const tagOptions = state.availableTags
-      .map((tag) => `<option value="${escapeHtml(tag)}" ${tag === state.tag ? 'selected' : ''}>${escapeHtml(tag)}</option>`)
-      .join('');
+    const hasTags = state.availableTags.length > 0;
+    const menuItems = ['', ...state.availableTags]
+      .map((tag) => `
+        <li role="option" data-tag="${escapeHtml(tag)}" aria-selected="${tag === state.tag ? 'true' : 'false'}" class="product-search-bar__menu-item${tag === state.tag ? ' is-selected' : ''}">
+          ${escapeHtml(tag || 'Toate')}
+        </li>
+      `).join('');
     filterNode.innerHTML = `
       <div class="product-search-bar" role="search">
-        <div class="product-search-bar__input">
-          <span class="product-search-bar__icon" aria-hidden="true">${icon('search')}</span>
+        <div class="product-search-bar__group">
+          <span class="product-search-bar__search-icon" aria-hidden="true">${icon('search')}</span>
           <input
             id="product-search-input"
             type="search"
-            class="input"
+            class="product-search-bar__input"
             placeholder="Caută după nume, descriere sau cod SKU…"
             value="${escapeHtml(state.q)}"
             autocomplete="off"
             aria-label="Caută produse"
           >
+          ${hasTags ? `
+            <span class="product-search-bar__separator" aria-hidden="true"></span>
+            <div class="product-search-bar__filter" data-open="false">
+              <button id="product-filter-trigger" type="button" class="product-search-bar__filter-trigger" aria-haspopup="listbox" aria-expanded="false">
+                <span class="product-search-bar__filter-label">Filtru:</span>
+                <span id="product-filter-value" class="product-search-bar__filter-value">${escapeHtml(tagLabel())}</span>
+                <span class="product-search-bar__filter-caret" aria-hidden="true">${icon('chevron-down')}</span>
+              </button>
+              <ul id="product-filter-menu" class="product-search-bar__menu" role="listbox" tabindex="-1" hidden>
+                ${menuItems}
+              </ul>
+            </div>
+          ` : ''}
         </div>
-        ${state.availableTags.length ? `
-          <div class="product-search-bar__select">
-            <label class="helper-text" for="product-tag-filter">Filtru</label>
-            <select id="product-tag-filter" class="select" aria-label="Filtrează după marcă">
-              <option value="">Toate</option>
-              ${tagOptions}
-            </select>
-          </div>
-        ` : ''}
-        <button id="product-search-reset" type="button" class="btn btn-ghost" ${(state.q || state.tag) ? '' : 'disabled'}>Resetează</button>
+        <button id="product-search-reset" type="button" class="product-search-bar__reset" ${(state.q || state.tag) ? '' : 'disabled'} aria-label="Resetează filtrele">
+          <span class="product-search-bar__reset-icon" aria-hidden="true">${icon('refresh-cw')}</span>
+          <span>Resetează</span>
+        </button>
       </div>
     `;
-    renderIcons(filterNode);
   };
 
   const updateResetButton = () => {
@@ -1002,6 +1015,16 @@ async function renderCategoryPage() {
     if (!reset) return;
     if (state.q || state.tag) reset.removeAttribute('disabled');
     else reset.setAttribute('disabled', '');
+  };
+
+  const updateFilterValue = () => {
+    const valueNode = qs('#product-filter-value', filterNode);
+    if (valueNode) valueNode.textContent = tagLabel();
+    qsa('.product-search-bar__menu-item', filterNode).forEach((node) => {
+      const matches = node.dataset.tag === state.tag;
+      node.setAttribute('aria-selected', matches ? 'true' : 'false');
+      node.classList.toggle('is-selected', matches);
+    });
   };
 
   const runSearch = async () => {
@@ -1020,27 +1043,73 @@ async function renderCategoryPage() {
   };
 
   let debounceTimer = null;
+  let outsideClickHandler = null;
+
+  const closeFilterMenu = () => {
+    const wrapper = qs('.product-search-bar__filter', filterNode);
+    const trigger = qs('#product-filter-trigger', filterNode);
+    const menu = qs('#product-filter-menu', filterNode);
+    if (wrapper) wrapper.dataset.open = 'false';
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    if (menu) menu.hidden = true;
+    if (outsideClickHandler) {
+      document.removeEventListener('mousedown', outsideClickHandler);
+      outsideClickHandler = null;
+    }
+  };
+
+  const openFilterMenu = () => {
+    const wrapper = qs('.product-search-bar__filter', filterNode);
+    const trigger = qs('#product-filter-trigger', filterNode);
+    const menu = qs('#product-filter-menu', filterNode);
+    if (!wrapper || !menu) return;
+    wrapper.dataset.open = 'true';
+    if (trigger) trigger.setAttribute('aria-expanded', 'true');
+    menu.hidden = false;
+    outsideClickHandler = (event) => {
+      if (!wrapper.contains(event.target)) closeFilterMenu();
+    };
+    document.addEventListener('mousedown', outsideClickHandler);
+  };
+
   const wireFilterBar = () => {
     const input = qs('#product-search-input', filterNode);
-    const tagSelect = qs('#product-tag-filter', filterNode);
+    const trigger = qs('#product-filter-trigger', filterNode);
+    const menu = qs('#product-filter-menu', filterNode);
     const resetButton = qs('#product-search-reset', filterNode);
 
     input?.addEventListener('input', (event) => {
       state.q = event.target.value;
+      updateResetButton();
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => { runSearch(); }, 250);
     });
 
-    tagSelect?.addEventListener('change', () => {
-      state.tag = tagSelect.value;
+    trigger?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const wrapper = qs('.product-search-bar__filter', filterNode);
+      if (wrapper?.dataset.open === 'true') closeFilterMenu();
+      else openFilterMenu();
+    });
+
+    menu?.addEventListener('click', (event) => {
+      const item = event.target.closest('.product-search-bar__menu-item');
+      if (!item) return;
+      state.tag = item.dataset.tag || '';
+      updateFilterValue();
+      closeFilterMenu();
       runSearch();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeFilterMenu();
     });
 
     resetButton?.addEventListener('click', () => {
       state.q = '';
       state.tag = '';
       if (input) input.value = '';
-      if (tagSelect) tagSelect.value = '';
+      updateFilterValue();
       runSearch();
     });
   };
