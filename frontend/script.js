@@ -28,6 +28,7 @@ const ICONS = {
   star: '<path d="m12 17.3-6.18 3.7 1.64-7.03L2 9.24l7.19-.61L12 2l2.81 6.63 7.19.61-5.46 4.73L18.18 21z"></path>',
   'layout-grid': '<rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect>',
   'layout-list': '<rect width="18" height="5" x="3" y="4" rx="1"></rect><rect width="18" height="5" x="3" y="15" rx="1"></rect>',
+  search: '<circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>',
   facebook: '<path d="M17 2h-3a5 5 0 0 0-5 5v3H6v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3V2Z"></path>',
   instagram: '<rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37a4 4 0 1 1-4.37-4.37 4 4 0 0 1 4.37 4.37Z"></path><path d="M17.5 6.5h.01"></path>',
   tiktok: '<path d="M14 4v9.5a3.5 3.5 0 1 1-3.5-3.5"></path><path d="M14 4c1.2 2.5 3 4 5 4"></path>'
@@ -940,13 +941,122 @@ async function renderCategoryPage() {
   if (titleNode) titleNode.textContent = currentMeta.title;
   if (descriptionNode) descriptionNode.textContent = currentMeta.description;
 
-  if (filterNode) filterNode.innerHTML = '';
+  const state = {
+    q: param('q') || '',
+    tag: param('tag') || '',
+    availableTags: []
+  };
+
+  const buildQuery = () => {
+    const parts = [];
+    if (slug) parts.push(`category=${encodeURIComponent(slug)}`);
+    if (state.q.trim()) parts.push(`q=${encodeURIComponent(state.q.trim())}`);
+    if (state.tag) parts.push(`tag=${encodeURIComponent(state.tag)}`);
+    return `/products${parts.length ? `?${parts.join('&')}` : ''}`;
+  };
+
+  const syncUrl = () => {
+    const url = new URL(location.href);
+    if (slug) url.searchParams.set('slug', slug);
+    if (state.q.trim()) url.searchParams.set('q', state.q.trim()); else url.searchParams.delete('q');
+    if (state.tag) url.searchParams.set('tag', state.tag); else url.searchParams.delete('tag');
+    history.replaceState({}, '', url);
+  };
+
+  const renderFilterBar = () => {
+    if (!filterNode) return;
+    const tagOptions = state.availableTags
+      .map((tag) => `<option value="${escapeHtml(tag)}" ${tag === state.tag ? 'selected' : ''}>${escapeHtml(tag)}</option>`)
+      .join('');
+    filterNode.innerHTML = `
+      <div class="product-search-bar" role="search">
+        <div class="product-search-bar__input">
+          <span class="product-search-bar__icon" aria-hidden="true">${icon('search')}</span>
+          <input
+            id="product-search-input"
+            type="search"
+            class="input"
+            placeholder="Caută după nume, descriere sau cod SKU…"
+            value="${escapeHtml(state.q)}"
+            autocomplete="off"
+            aria-label="Caută produse"
+          >
+        </div>
+        ${state.availableTags.length ? `
+          <div class="product-search-bar__select">
+            <label class="helper-text" for="product-tag-filter">Filtru</label>
+            <select id="product-tag-filter" class="select" aria-label="Filtrează după marcă">
+              <option value="">Toate</option>
+              ${tagOptions}
+            </select>
+          </div>
+        ` : ''}
+        <button id="product-search-reset" type="button" class="btn btn-ghost" ${(state.q || state.tag) ? '' : 'disabled'}>Resetează</button>
+      </div>
+    `;
+    renderIcons(filterNode);
+  };
+
+  const updateResetButton = () => {
+    const reset = qs('#product-search-reset', filterNode);
+    if (!reset) return;
+    if (state.q || state.tag) reset.removeAttribute('disabled');
+    else reset.setAttribute('disabled', '');
+  };
+
+  const runSearch = async () => {
+    host.innerHTML = skeletonCards(4);
+    syncUrl();
+    updateResetButton();
+    try {
+      const products = await fetchProducts(buildQuery());
+      const empty = (state.q || state.tag)
+        ? 'Nu am găsit produse pentru criteriile selectate.'
+        : 'Nu există produse în această categorie.';
+      renderProductGrid(host, products, empty);
+    } catch (error) {
+      host.innerHTML = `<div class="empty-state"><div class="icon-badge">${icon('package', 'icon-xl')}</div><h3>Nu am putut încărca produsele</h3><p>${escapeHtml(error.message || 'Încearcă din nou mai târziu.')}</p></div>`;
+    }
+  };
+
+  let debounceTimer = null;
+  const wireFilterBar = () => {
+    const input = qs('#product-search-input', filterNode);
+    const tagSelect = qs('#product-tag-filter', filterNode);
+    const resetButton = qs('#product-search-reset', filterNode);
+
+    input?.addEventListener('input', (event) => {
+      state.q = event.target.value;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => { runSearch(); }, 250);
+    });
+
+    tagSelect?.addEventListener('change', () => {
+      state.tag = tagSelect.value;
+      runSearch();
+    });
+
+    resetButton?.addEventListener('click', () => {
+      state.q = '';
+      state.tag = '';
+      if (input) input.value = '';
+      if (tagSelect) tagSelect.value = '';
+      runSearch();
+    });
+  };
 
   host.innerHTML = skeletonCards(4);
 
   try {
-    const products = await fetchProducts(`/products?category=${encodeURIComponent(slug || '')}`);
-    renderProductGrid(host, products, 'Nu există produse în această categorie.');
+    const baseProducts = await fetchProducts(`/products?category=${encodeURIComponent(slug || '')}`);
+    state.availableTags = Array.from(new Set(baseProducts.flatMap((product) => product.tags || []))).filter(Boolean).sort();
+    renderFilterBar();
+    wireFilterBar();
+    if (state.q.trim() || state.tag) {
+      await runSearch();
+    } else {
+      renderProductGrid(host, baseProducts, 'Nu există produse în această categorie.');
+    }
   } catch (error) {
     host.innerHTML = `<div class="empty-state"><div class="icon-badge">${icon('package', 'icon-xl')}</div><h3>Nu am putut încărca categoria</h3><p>${escapeHtml(error.message || 'Încearcă din nou mai târziu.')}</p></div>`;
   }
