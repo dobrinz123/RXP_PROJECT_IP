@@ -322,6 +322,8 @@ p {
   font-weight: 700;
   color: var(--color-primary);
   letter-spacing: 0;
+  /* nu lăsa titlul să se rupă pe 2 rânduri și să se suprapună cu meniul */
+  white-space: nowrap;
 }
 
 .brand-subtitle {
@@ -1589,7 +1591,9 @@ p {
   background: var(--color-white);
   border: 0.5px solid var(--color-neutral-300);
   border-radius: 8px;
-  overflow: hidden;
+  /* NU folosi overflow:hidden aici – ar tăia dropdown-ul de filtre care e
+     poziționat absolut sub bară. Rotunjirea colțurilor e suficientă. */
+  overflow: visible;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
@@ -1660,6 +1664,9 @@ p {
   cursor: pointer;
   font-family: inherit;
   white-space: nowrap;
+  /* trigger-ul e ultimul element din pill – rotunjim colțurile din dreapta
+     ca fundalul de hover/open să nu depășească marginea rotunjită a barei */
+  border-radius: 0 8px 8px 0;
   transition: background-color 120ms ease;
 }
 
@@ -2678,19 +2685,11 @@ p {
   .footer-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-}
 
-@media (max-width: 768px) {
-  .container {
-    width: min(var(--container-width), calc(100% - 24px));
-  }
-
-  .section {
-    padding: var(--space-64) 0;
-  }
-
+  /* sub 1024px (ex: monitor pe jumătate) nu mai încape meniul desktop
+     lângă logo → trecem pe meniul hamburger ca să nu se suprapună */
   .header-shell {
-    min-height: 60px;
+    min-height: 64px;
   }
 
   .main-nav,
@@ -2707,6 +2706,20 @@ p {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: min(var(--container-width), calc(100% - 24px));
+  }
+
+  .section {
+    padding: var(--space-64) 0;
+  }
+
+  .header-shell {
+    min-height: 60px;
   }
 
   .brand-title {
