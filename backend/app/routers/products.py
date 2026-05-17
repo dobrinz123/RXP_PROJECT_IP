@@ -1,6 +1,5 @@
 # app/routers/products.py
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from ..models import Product
@@ -26,8 +25,9 @@ def list_products(
     if category:
         qry = qry.filter(Product.category == category)
     if tag:
-        # tags e un array TEXT[], folosim operatorul ANY
-        qry = qry.filter(tag == func.any(Product.tags))  # sau Product.tags.any(tag)
+        # tags e un array TEXT[]; `tag == func.any(...)` genera SQL invalid
+        # (any() agregat) → 500. Folosim operatorul de containment: tags @> ARRAY[tag]
+        qry = qry.filter(Product.tags.contains([tag]))
     if q:
         like = f"%{q}%"
         qry = qry.filter((Product.name.ilike(like)) | (Product.description.ilike(like)) | (Product.sku.ilike(like)))

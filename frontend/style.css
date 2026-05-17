@@ -521,7 +521,9 @@ p {
 .mobile-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  /* peste site-header (z-index:50), cookie (60) și toast (70) ca drawer-ul
+     să nu fie acoperit de header (titlul „3D PRINT SHOP" se suprapunea) */
+  z-index: 80;
   background: rgba(26, 26, 26, 0.52);
   opacity: 0;
   visibility: hidden;
@@ -537,7 +539,7 @@ p {
   position: fixed;
   top: 0;
   right: 0;
-  z-index: 45;
+  z-index: 90;
   display: grid;
   align-content: start;
   gap: var(--space-24);
